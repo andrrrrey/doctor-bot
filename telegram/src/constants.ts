@@ -1,6 +1,6 @@
 import { Question } from "./types";
 
-export const BOT_TOKEN = '7589150034:AAG673CiLfuEC8Oz9WhC6lPVO0ZGxj1cBI0';
+export const BOT_TOKEN = 'your_tg_bot_id';
 
 export const FINAL_QUESTION_ID = 'final_question';
 
