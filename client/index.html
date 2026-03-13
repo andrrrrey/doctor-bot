@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Опросник перед анализом МРТ</title>
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="./images/favicon.png" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./script.js"></script>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Опросник по боли в спине</h1>
+    <div class="about-wrap">
+      <img src="./images/doctor.jpg" class="docto-img" alt="доктор Антон Епифанов">
+      <div class="text-wrap">
+        <p>Меня зовут Антон Епифанов, я невролог, специализирующийся на заболеваниях позвоночника. Я разработал для вас
+          опросник по боли в спине, основанный на 17‑летнем опыте работы с пациентами, страдающими различными
+          заболеваниями позвоночника.</p>
+        <p>Тест носит исключительно образовательный и информационный характер, а не
+          медицинский. Для постановки диагноза и назначения лечения в любом случае <strong>требуется консультация
+            медицинского специалиста.</strong></p>
+        <ol>
+          <li><strong>Опросник не ставит диагноз</strong>, а лишь оценивает сочетание и выраженность некоторых
+            симптомов,
+            что может помочь врачу и пациенту.</li>
+          <li>В результате вы узнаете, чего не следует делать со спиной, к какому специалисту обратиться, и какие виды
+            лечения могут быть назначены в вашем случае.</li>
+          <li>Вы сможете <strong>обратить внимание на важные симптомы</strong>, которые ранее могли не замечать.</li>
+        </ol>
+      </div>
+    </div>
+    <h2>Ответьте на вопросы ниже</h2>
+    <form id="surveyForm" class="survey-form"></form>
+  </main>
+
+  <footer class="container">
+    <a href="https://epifanov.clinic/" target="_blank" class="logo">
+      <div class="logo-top">КЛИНИКА ДОКТОРА</div>
+      <div class="logo-bottom">ЕПИФАНОВА</div>
+    </a>
+
+    <div class="clinic-wrap">
+      <div class="clinic-info">
+        <p class="clinic-city">Москва</p>
+        <p class="clinic-contact">
+          ул. Гамалеи, д. 23 к1</br>
+          8 (495) 323-78-01</br>
+          eclinic.msk@yandex.ru
+        </p>
+        <p class="clinic-license">
+          ООО “Е-КЛИНИК”</br>
+          Лицензия № Л041-01137-77/01089561
+        </p>
+      </div>
+
+      <div class="clinic-info">
+        <p class="clinic-city">Самара</p>
+        <p class="clinic-contact">
+          ул. Владимирская, д. 1а</br>
+          8 (846) 211-04-61</br>
+          epifanovclinic@gmail.com
+        </p>
+        <p class="clinic-license">
+          ООО "НАУКА ОРТО"</br>
+          Лицензия № Л041-01184-63/00287155
+        </p>
+      </div>
+
+      <div class="clinic-info">
+        <p class="clinic-city">Грозный</p>
+        <p class="clinic-contact">
+          ул. Тасуева, д. 8д</br>
+          8 (871) 277-45-37</br>
+          kde.grozny@gmail.com</p>
+        <p class="clinic-license">
+          ООО "Е-КЛИНИК ГРОЗНЫЙ</br>
+          Лицензия № Л041-01190-20/00672568
+        </p>
+      </div>
+
+      <div class="clinic-info">
+        <p class="clinic-city">Алматы</p>
+        <p class="clinic-contact">
+          ул. Навои, д. 208/3 помещение 88</br>
+          8 (701) 006-48-48</br>
+          call-center@naykamed.ru</p>
+        <p class="clinic-license">
+          ООО “Е-КЛИНИК”</br>
+          Лицензия № Л041-01137-77/01089561
+        </p>
+      </div>
+    </div>
+  </footer>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+    (function (m, e, t, r, i, k, a) {
+      m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments) };
+      m[i].l = 1 * new Date();
+      for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
+      k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a)
+    })
+      (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+    ym(98420996, "init", {
+      clickmap: true,
+      trackLinks: true,
+      accurateTrackBounce: true,
+      webvisor: true
+    });
+  </script>
+  <noscript>
+    <div><img src="https://mc.yandex.ru/watch/98420996" style="position:absolute; left:-9999px;" alt="" /></div>
+  </noscript>
+  <!-- /Yandex.Metrika counter -->
+  <!-- Roistat Counter Start -->
+  <script>
+    (function (w, d, s, h, id) {
+      w.roistatProjectId = id; w.roistatHost = h;
+      var p = d.location.protocol == "https:" ? "https://" : "http://";
+      var u = /^.*roistat_visit=[^;]+(.*)?$/.test(d.cookie) ? "/dist/module.js" : "/api/site/1.0/" + id + "/init?referrer=" + encodeURIComponent(d.location.href);
+      var js = d.createElement(s); js.charset = "UTF-8"; js.async = 1; js.src = p + h + u; var js2 = d.getElementsByTagName(s)[0]; js2.parentNode.insertBefore(js, js2);
+    })(window, document, 'script', 'cloud.roistat.com', '82a0cc11dc7b83825b2576113954d666');
+  </script>
+  <!-- Roistat Counter End -->
+</body>
+
+</html>

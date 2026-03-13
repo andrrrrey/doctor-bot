@@ -1,0 +1,177 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+ul,
+ol {
+  margin-left: var(--pico-spacing);
+}
+
+.container {
+  margin-top: calc(var(--pico-spacing) * 2);
+  margin-bottom: calc(var(--pico-spacing) * 2);
+}
+
+.about-wrap {
+  display: flex;
+  align-items: start;
+  gap: var(--pico-spacing);
+  margin-bottom: var(--pico-spacing);
+}
+
+@media (max-width: 767px) {
+  .about-wrap {
+    flex-direction: column;
+  }
+}
+
+.docto-img {
+  width: 350px;
+  max-width: 50%;
+  border-radius: var(--pico-spacing);
+}
+
+@media (max-width: 1023px) {
+  .docto-img {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+.text-wrap {
+  max-width: 900px;
+}
+
+.form-wrap {
+  max-width: 620px;
+  margin-top: calc(var(--pico-spacing) * 2);
+}
+
+.survey-form {
+  margin-bottom: calc(var(--pico-spacing) * 2);
+}
+
+fieldset {
+  margin-bottom: calc(var(--pico-spacing) * 1.5);
+  margin-bottom: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+input[type="number"] {
+  width: 200px;
+  margin-bottom: 0;
+}
+
+label:last-child {
+  margin-bottom: 0;
+}
+
+article:not(.invalid) footer {
+  display: none;
+}
+
+article.invalid {
+  border: 1px;
+  border-style: solid;
+  border-color: var(--pico-form-element-invalid-border-color);
+}
+
+article.invalid footer {
+  padding-left: 2.3rem;
+  color: var(--pico-form-element-invalid-border-color);
+  background-image: var(--pico-icon-invalid);
+  background-position: center left .75rem;
+  background-size: 1rem auto;
+  background-repeat: no-repeat;
+}
+
+.error-message {
+  display: block;
+  margin-top: 0.3rem;
+  padding-left: 1.3rem;
+  color: var(--pico-form-element-invalid-border-color);
+  background-image: var(--pico-icon-invalid);
+  background-position: center left;
+  background-size: 1rem auto;
+  background-repeat: no-repeat;
+}
+
+/* -------------------------------------------------------- */
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--pico-primary-background);
+}
+
+.logo-top {
+  font-size: 19px;
+  margin-bottom: -13px;
+}
+
+.logo-bottom {
+  font-size: 30px;
+}
+
+.clinic-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 30px;
+  width: 70%;
+}
+
+.clinic-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clinic-info p {
+  margin: 0;
+}
+
+.clinic-city {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.clinic-contact {
+  font-size: 12px;
+}
+
+.clinic-license {
+  font-size: 10px;
+}
+
+@media (max-width: 1023px) {
+  .clinic-wrap {
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 767px) {
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .clinic-wrap {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
