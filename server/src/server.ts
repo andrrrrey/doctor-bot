@@ -1,26 +1,74 @@
+import 'dotenv/config';
+import path from 'path';
 import express, { Request, Response } from 'express';
-import { START_DIAGNOSIS, PAIN_TEXT, INFLAMMATION_TEXT, PAIN_HEADER, INFLAMMATION_HEADER, NEUROSIS_HEADER, NEUROSIS_TEXT, getDiagnosisHTML, RUS_DIAGNOSIS, QUESTIONS } from "./constants";
-import { Answer, ConsultationAnswer, getPainScale, getRusQuestionsAndAnswers, processAnswers, processResultDiagnosis, secondProcessAnswers } from './process-answers';
+import {
+  START_DIAGNOSIS,
+  PAIN_TEXT,
+  INFLAMMATION_TEXT,
+  PAIN_HEADER,
+  INFLAMMATION_HEADER,
+  NEUROSIS_HEADER,
+  NEUROSIS_TEXT,
+  getDiagnosisHTML,
+  RUS_DIAGNOSIS,
+  QUESTIONS,
+} from './constants';
+import {
+  Answer,
+  ConsultationAnswer,
+  getPainScale,
+  getRusQuestionsAndAnswers,
+  processAnswers,
+  processResultDiagnosis,
+  secondProcessAnswers,
+} from './process-answers';
 import { sendMailWithPDF } from './transporter';
 import { generatePDF } from './generate-pdf';
 import { sendLeadToBitrix } from './bitrix';
+import { questionsRouter } from './routes/questions';
+import { sessionsRouter } from './routes/sessions';
+import { submissionsRouter } from './routes/submissions';
+import { settingsRouter } from './routes/settings';
 
 const app = express();
-const port = 3000;
+const port = Number(process.env.PORT ?? 3000);
 
-app.use(express.static('public'));
+// ── Static files ────────────────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, '../../public')));
+
+// Serve uploaded files
+const uploadDir = path.resolve(process.env.UPLOAD_DIR ?? './uploads');
+app.use('/uploads', express.static(uploadDir));
+
+// ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json());
 app.use((req: Request, res: Response, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
   next();
 });
 
-app.get('/survey', (req: Request, res: Response) => {
-  res.json({
-    questions: QUESTIONS,
-  });
+// ── Widget HTML endpoint ─────────────────────────────────────────────────────
+// Serves the embeddable widget page at /widget
+app.get('/widget', (_req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, '../../public/widget.html'));
+});
+
+// ── New API routes ───────────────────────────────────────────────────────────
+app.use('/api/questions', questionsRouter);
+app.use('/api/sessions', sessionsRouter);
+app.use('/api/submissions', submissionsRouter);
+app.use('/api/settings', settingsRouter);
+
+// ── Legacy routes (kept for backward compatibility with Telegram bot) ────────
+
+app.get('/survey', (_req: Request, res: Response) => {
+  res.json({ questions: QUESTIONS });
 });
 
 interface SubmitRequest extends Request {
@@ -31,10 +79,7 @@ type PostTestResultsRequest = {
   html: string;
   diagnosis?: string;
   extendedDiagnosis?: string;
-  answers?: {
-    question: string;
-    answers: string[];
-  }[]
+  answers?: { question: string; answers: string[] }[];
 };
 
 app.post('/postTestResults', (req: SubmitRequest, res: Response) => {
@@ -45,45 +90,31 @@ app.post('/postTestResults', (req: SubmitRequest, res: Response) => {
 
   let htmlContent = '';
   const extendedDiagnosis = `
-          Нервоз: ${secondProcessDiagnosis.neurosis}
-          Мышцы: ${secondProcessDiagnosis.muscles}
-          Грыжа: ${secondProcessDiagnosis.hernia}
-          Артроз: ${secondProcessDiagnosis.arthrosis}
-          Стеноз: ${secondProcessDiagnosis.stenosis}
-          Воспаление: ${secondProcessDiagnosis.inflammation}
+    Нервоз: ${secondProcessDiagnosis.neurosis}
+    Мышцы: ${secondProcessDiagnosis.muscles}
+    Грыжа: ${secondProcessDiagnosis.hernia}
+    Артроз: ${secondProcessDiagnosis.arthrosis}
+    Стеноз: ${secondProcessDiagnosis.stenosis}
+    Воспаление: ${secondProcessDiagnosis.inflammation}
   `;
 
   const painScale = getPainScale(answers);
   const painTextId = painScale < 4 ? 0 : painScale < 6 ? 1 : 2;
-  htmlContent += `
-    ${PAIN_HEADER}
-    ${PAIN_TEXT[painTextId]}`;
+  htmlContent += `${PAIN_HEADER}${PAIN_TEXT[painTextId]}`;
 
   if (secondProcessDiagnosis.inflammation > 0) {
-    const inflammationTextId = secondProcessDiagnosis.inflammation - 1;
-    htmlContent += `
-      ${INFLAMMATION_HEADER}
-      ${INFLAMMATION_TEXT[inflammationTextId]}`;
+    htmlContent += `${INFLAMMATION_HEADER}${INFLAMMATION_TEXT[secondProcessDiagnosis.inflammation - 1]}`;
   }
 
   const resultDiagnosis = processResultDiagnosis(secondProcessDiagnosis);
-  const rusDiagnosis = resultDiagnosis.map(diagnosis => RUS_DIAGNOSIS[diagnosis]);
-
+  const rusDiagnosis = resultDiagnosis.map((d) => RUS_DIAGNOSIS[d]);
   htmlContent += getDiagnosisHTML(resultDiagnosis.join('_'));
 
   const isNeurosis = firstProcessDiagnosis.neurosis > 7;
-
-  if (isNeurosis) {
-    htmlContent += `
-      ${NEUROSIS_HEADER}
-      ${NEUROSIS_TEXT}`;
-  }
+  if (isNeurosis) htmlContent += `${NEUROSIS_HEADER}${NEUROSIS_TEXT}`;
 
   const rusAnswers = getRusQuestionsAndAnswers(answers);
-
-  const result: PostTestResultsRequest = {
-    html: htmlContent,
-  };
+  const result: PostTestResultsRequest = { html: htmlContent };
 
   if (!(resultDiagnosis.length === 1 && resultDiagnosis[0] === 'muscles' && isNeurosis)) {
     result.diagnosis = rusDiagnosis.join(' и ');
@@ -99,36 +130,22 @@ interface SubmitConsultationRequest extends Request {
 }
 
 app.post('/postConsultationData', async (req: SubmitConsultationRequest, res: Response) => {
-  const consultationData = req.body;
-  const { patientName, patientPhone, patientCity, diagnosis, answers, extendedDiagnosis } = consultationData;
+  const { patientName, patientPhone, patientCity, diagnosis, answers, extendedDiagnosis } = req.body;
   try {
     const pdfBuffer = await generatePDF(answers);
-
-    await sendMailWithPDF(`
-      Данные о пациенте  
-      Имя:  ${patientName}
-      Телефон:  ${patientPhone}
-      Город:  ${patientCity}
-      Диагноз:  ${diagnosis}
-      Расширенный диагноз:  ${extendedDiagnosis}
-    `,
-      pdfBuffer
+    await sendMailWithPDF(
+      `Данные о пациенте\nИмя: ${patientName}\nТелефон: ${patientPhone}\nГород: ${patientCity}\nДиагноз: ${diagnosis}\nРасширенный диагноз: ${extendedDiagnosis}`,
+      pdfBuffer,
     );
-
-    const allQuestionsAndAnswers = answers.map(item => `${item.question}: ${item.answers.join('. ')}`).join('\n');
-    await sendLeadToBitrix({
-      name: patientName,
-      phone: patientPhone,
-      diagnosis: diagnosis,
-      extendedDiagnosis: extendedDiagnosis,
-      answers: allQuestionsAndAnswers,
-    });
-
-
+    const allQA = answers.map((item) => `${item.question}: ${item.answers.join('. ')}`).join('\n');
+    await sendLeadToBitrix({ name: patientName, phone: patientPhone, diagnosis, extendedDiagnosis, answers: allQA });
     res.status(200).json({ message: 'Письмо успешно отправлено' });
   } catch (error) {
     res.status(500).json({ error });
   }
 });
 
-app.listen(port, () => { });
+// ── Start ───────────────────────────────────────────────────────────────────
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});

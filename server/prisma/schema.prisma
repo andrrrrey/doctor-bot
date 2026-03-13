@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum QuestionType {
+  number
+  radio
+  checkbox
+}
+
+model Question {
+  id         String       @id
+  question   String
+  type       QuestionType
+  order      Int
+  isActive   Boolean      @default(true)
+  parentId   String?
+  conditions String[]
+  options    AnswerOption[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model AnswerOption {
+  id         Int      @id @default(autoincrement())
+  questionId String
+  value      String
+  order      Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id          String       @id @default(uuid())
+  projectId   String?
+  source      String?
+  theme       String?
+  completed   Boolean      @default(false)
+  submissions Submission[]
+  createdAt   DateTime     @default(now())
+}
+
+model Submission {
+  id                String   @id @default(uuid())
+  sessionId         String
+  session           Session  @relation(fields: [sessionId], references: [id])
+  patientName       String?
+  patientPhone      String?
+  patientCity       String?
+  diagnosis         String?
+  extendedDiagnosis String?
+  answers           Json
+  fileUrl           String?
+  fileName          String?
+  bitrixStatus      String   @default("pending")
+  bitrixError       String?
+  createdAt         DateTime @default(now())
+}
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @default(now())
+}
