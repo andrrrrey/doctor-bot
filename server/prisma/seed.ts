@@ -2,6 +2,8 @@
 const { Pool } = require('pg') as { Pool: new (opts: { connectionString?: string }) => unknown };
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, QuestionType } from '@prisma/client';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bcrypt = require('bcryptjs') as { hashSync: (pwd: string, rounds: number) => string };
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool as never);
@@ -303,6 +305,15 @@ async function main() {
       create: s,
     });
   }
+
+  console.log('Seeding admin user...');
+  const defaultPassword = process.env.ADMIN_PASSWORD ?? 'admin123';
+  const passwordHash = bcrypt.hashSync(defaultPassword, 10);
+  await (prisma as unknown as { admin: { upsert: (args: unknown) => Promise<unknown> } }).admin.upsert({
+    where: { login: 'admin' },
+    update: {},
+    create: { login: 'admin', passwordHash },
+  });
 
   console.log('Done!');
 }

@@ -10,6 +10,15 @@ enum QuestionType {
   number
   radio
   checkbox
+  text
+  file
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  login        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
 }
 
 model Question {
