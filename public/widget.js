@@ -23,6 +23,13 @@ if (window.ResizeObserver) {
   new ResizeObserver(notifyHeight).observe(document.body);
 }
 
+// ── Listen for scroll-to-top command from parent ──────────────────────────────
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'doctor-bot-scroll-top') {
+    window.scrollTo(0, 0);
+  }
+});
+
 // ── State ────────────────────────────────────────────────────────────────────
 let sessionId = null;
 let surveyResult = null; // { html, diagnosis, extendedDiagnosis, answers }
@@ -103,7 +110,9 @@ async function loadQuestions() {
     loader.remove();
     renderForm(data);
     addSubmitButton();
+    window.scrollTo(0, 0);
     notifyHeight();
+    window.parent.postMessage({ type: 'doctor-bot-ready' }, '*');
   } catch {
     loader.innerHTML = '<span style="color:var(--w-error)">Не удалось загрузить опросник. Попробуйте обновить страницу.</span>';
     notifyHeight();
