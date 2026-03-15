@@ -29,6 +29,11 @@ import { questionsRouter } from './routes/questions';
 import { sessionsRouter } from './routes/sessions';
 import { submissionsRouter } from './routes/submissions';
 import { settingsRouter } from './routes/settings';
+import { adminAuthRouter } from './routes/admin/auth';
+import { adminQuestionsRouter } from './routes/admin/questions';
+import { adminSubmissionsRouter } from './routes/admin/submissions';
+import { adminStatsRouter } from './routes/admin/stats';
+import { adminSettingsRouter } from './routes/admin/settings';
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -59,11 +64,23 @@ app.get('/widget', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../../public/widget.html'));
 });
 
+// ── Admin panel HTML ─────────────────────────────────────────────────────────
+app.get('/admin', (_req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, '../../public/admin/index.html'));
+});
+
 // ── New API routes ───────────────────────────────────────────────────────────
 app.use('/api/questions', questionsRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/submissions', submissionsRouter);
 app.use('/api/settings', settingsRouter);
+
+// ── Admin API routes ─────────────────────────────────────────────────────────
+app.use('/api/admin/auth', adminAuthRouter);
+app.use('/api/admin/questions', adminQuestionsRouter);
+app.use('/api/admin/submissions', adminSubmissionsRouter);
+app.use('/api/admin/stats', adminStatsRouter);
+app.use('/api/admin/settings', adminSettingsRouter);
 
 // ── Legacy routes (kept for backward compatibility with Telegram bot) ────────
 

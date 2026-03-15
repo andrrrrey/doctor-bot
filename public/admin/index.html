@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Админ-панель — Doctor Bot</title>
+  <link rel="stylesheet" href="/admin/style.css" />
+</head>
+<body>
+
+<!-- ════════════════════════ LOGIN PAGE ════════════════════════ -->
+<div id="login-page" class="login-wrapper hidden">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="var(--primary)"/>
+        <path d="M20 8v24M8 20h24" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <span>Doctor Bot Admin</span>
+    </div>
+    <h2>Вход в панель управления</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-input">Логин</label>
+        <input type="text" id="login-input" placeholder="admin" autocomplete="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password-input">Пароль</label>
+        <input type="password" id="password-input" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <div id="login-error" class="error-msg hidden"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="login-btn">Войти</button>
+    </form>
+  </div>
+</div>
+
+<!-- ════════════════════════ MAIN APP ════════════════════════ -->
+<div id="app" class="app-wrapper hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="var(--primary)"/>
+        <path d="M20 8v24M8 20h24" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <span>Doctor Bot</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#questions" class="nav-item active" data-section="questions">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Опросы / Вопросы
+      </a>
+      <a href="#submissions" class="nav-item" data-section="submissions">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Заявки / Прохождения
+      </a>
+      <a href="#stats" class="nav-item" data-section="stats">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+        </svg>
+        Статистика
+      </a>
+      <a href="#settings" class="nav-item" data-section="settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
+        Настройки
+      </a>
+    </nav>
+    <button class="btn-logout" id="logout-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+      Выйти
+    </button>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content">
+
+    <!-- ════ QUESTIONS SECTION ════ -->
+    <section id="section-questions" class="section">
+      <div class="section-header">
+        <h1>Опросы / Вопросы</h1>
+        <button class="btn btn-primary" id="add-question-btn">+ Добавить вопрос</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table" id="questions-table">
+          <thead>
+            <tr>
+              <th style="width:50px">№</th>
+              <th>Вопрос</th>
+              <th style="width:110px">Тип</th>
+              <th style="width:100px">Родитель</th>
+              <th style="width:80px">Статус</th>
+              <th style="width:150px">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="questions-tbody">
+            <tr><td colspan="6" class="loading-cell">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ════ SUBMISSIONS SECTION ════ -->
+    <section id="section-submissions" class="section hidden">
+      <div class="section-header">
+        <h1>Заявки / Прохождения</h1>
+        <div class="filters">
+          <input type="date" id="sub-date-from" placeholder="От" class="filter-input" />
+          <input type="date" id="sub-date-to" placeholder="До" class="filter-input" />
+          <select id="sub-bitrix-filter" class="filter-input">
+            <option value="">Все статусы Bitrix</option>
+            <option value="pending">Pending</option>
+            <option value="sent">Отправлено</option>
+            <option value="error">Ошибка</option>
+          </select>
+          <select id="sub-file-filter" class="filter-input">
+            <option value="">С файлом / без</option>
+            <option value="true">С файлом</option>
+            <option value="false">Без файла</option>
+          </select>
+          <button class="btn btn-secondary" id="sub-filter-btn">Применить</button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table" id="submissions-table">
+          <thead>
+            <tr>
+              <th>Дата / время</th>
+              <th>Пользователь</th>
+              <th>Телефон</th>
+              <th>Город</th>
+              <th>Диагноз</th>
+              <th style="width:70px">Файл</th>
+              <th style="width:100px">Bitrix</th>
+              <th style="width:80px">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="submissions-tbody">
+            <tr><td colspan="8" class="loading-cell">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="submissions-pagination"></div>
+    </section>
+
+    <!-- ════ STATS SECTION ════ -->
+    <section id="section-stats" class="section hidden">
+      <div class="section-header">
+        <h1>Статистика</h1>
+        <div class="filters">
+          <input type="date" id="stats-date-from" class="filter-input" />
+          <input type="date" id="stats-date-to" class="filter-input" />
+          <button class="btn btn-secondary" id="stats-filter-btn">Применить</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card loading-cell">Загрузка...</div>
+      </div>
+
+      <div class="funnel-section">
+        <h2>Воронка конверсий</h2>
+        <div class="funnel" id="funnel"></div>
+      </div>
+    </section>
+
+    <!-- ════ SETTINGS SECTION ════ -->
+    <section id="section-settings" class="section hidden">
+      <div class="section-header">
+        <h1>Настройки</h1>
+        <button class="btn btn-primary" id="save-settings-btn">Сохранить</button>
+      </div>
+
+      <form id="settings-form">
+        <div class="settings-group">
+          <h2>Оформление опросника</h2>
+          <div class="settings-grid">
+            <div class="form-group">
+              <label>Заголовок опросника</label>
+              <input type="text" name="surveyTitle" placeholder="Опросник по боли в спине" />
+            </div>
+            <div class="form-group">
+              <label>Основной цвет</label>
+              <div class="color-row">
+                <input type="color" name="primaryColor" value="#1a56db" class="color-picker" />
+                <input type="text" name="primaryColorHex" placeholder="#1a56db" class="color-hex" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Цвет фона</label>
+              <div class="color-row">
+                <input type="color" name="backgroundColor" value="#ffffff" class="color-picker" />
+                <input type="text" name="backgroundColorHex" placeholder="#ffffff" class="color-hex" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Цвет текста</label>
+              <div class="color-row">
+                <input type="color" name="textColor" value="#111827" class="color-picker" />
+                <input type="text" name="textColorHex" placeholder="#111827" class="color-hex" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Скругление углов (border-radius)</label>
+              <input type="text" name="borderRadius" placeholder="8px" />
+            </div>
+            <div class="form-group">
+              <label>Шрифт (font-family)</label>
+              <input type="text" name="fontFamily" placeholder="system-ui, sans-serif" />
+            </div>
+            <div class="form-group full-width">
+              <label>Дисклеймер</label>
+              <textarea name="surveyDisclaimer" rows="3"></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label>Ссылка на политику конфиденциальности</label>
+              <input type="url" name="privacyPolicyUrl" placeholder="https://example.com/privacy" />
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h2>Параметры Bitrix</h2>
+          <div class="settings-grid">
+            <div class="form-group full-width">
+              <label>URL вебхука Bitrix24</label>
+              <input type="url" name="bitrixWebhookUrl" placeholder="https://domain.bitrix24.ru/rest/..." />
+            </div>
+            <div class="form-group">
+              <label>Заголовок лида в Bitrix</label>
+              <input type="text" name="bitrixLeadTitle" placeholder="Лид из бота про боль в спине" />
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h2>Email-уведомления</h2>
+          <div class="settings-grid">
+            <div class="form-group full-width">
+              <label>Получатели (через запятую)</label>
+              <input type="text" name="emailRecipients" placeholder="email1@example.com, email2@example.com" />
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <h2>Безопасность</h2>
+          <div class="settings-grid">
+            <div class="form-group">
+              <label>Текущий пароль</label>
+              <input type="password" id="cp-current" autocomplete="current-password" />
+            </div>
+            <div class="form-group">
+              <label>Новый пароль</label>
+              <input type="password" id="cp-new" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+              <label>Повторите новый пароль</label>
+              <input type="password" id="cp-confirm" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+              <button type="button" class="btn btn-secondary" id="change-password-btn">Сменить пароль</button>
+            </div>
+          </div>
+          <div id="cp-msg" class="hidden"></div>
+        </div>
+      </form>
+      <div id="settings-msg" class="hidden"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ════════════════════════ MODALS ════════════════════════ -->
+
+<!-- Question modal -->
+<div id="question-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="question-modal-title">Новый вопрос</h3>
+      <button class="modal-close" data-close="question-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="question-form">
+        <input type="hidden" id="qf-id-original" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>ID вопроса <span class="hint">(латиница, без пробелов)</span></label>
+            <input type="text" id="qf-id" pattern="[a-z0-9_\-]+" required placeholder="my_question" />
+          </div>
+          <div class="form-group">
+            <label>Тип поля</label>
+            <select id="qf-type" required>
+              <option value="radio">radio — один вариант</option>
+              <option value="checkbox">checkbox — несколько вариантов</option>
+              <option value="number">number — число</option>
+              <option value="text">text — текст</option>
+              <option value="file">file — файл</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Текст вопроса <span class="hint">(поддерживается HTML)</span></label>
+          <textarea id="qf-question" rows="3" required placeholder="Укажите ваш возраст"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Порядок</label>
+            <input type="number" id="qf-order" min="1" placeholder="автоматически" />
+          </div>
+          <div class="form-group">
+            <label>Статус</label>
+            <select id="qf-active">
+              <option value="true">Активен</option>
+              <option value="false">Скрыт</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Родительский вопрос <span class="hint">(для зависимых вопросов)</span></label>
+          <select id="qf-parent">
+            <option value="">— нет (главный вопрос) —</option>
+          </select>
+        </div>
+
+        <div id="qf-conditions-row" class="form-group hidden">
+          <label>Условия показа <span class="hint">(значения родительского ответа, по одному на строку)</span></label>
+          <textarea id="qf-conditions" rows="3" placeholder="Да&#10;Нет"></textarea>
+        </div>
+
+        <div id="qf-options-section" class="form-group">
+          <label>Варианты ответов <span class="hint">(по одному на строку)</span></label>
+          <textarea id="qf-options" rows="5" placeholder="Вариант 1&#10;Вариант 2&#10;Вариант 3"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="question-modal">Отмена</button>
+      <button class="btn btn-primary" id="save-question-btn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Submission detail modal -->
+<div id="submission-modal" class="modal-overlay hidden">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3>Детали заявки</h3>
+      <button class="modal-close" data-close="submission-modal">×</button>
+    </div>
+    <div class="modal-body" id="submission-detail"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="submission-modal">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="toast hidden"></div>
+
+<script src="/admin/app.js"></script>
+</body>
+</html>
