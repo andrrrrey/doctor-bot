@@ -73,7 +73,10 @@ exports.adminQuestionsRouter.post('/', (req, res) => __awaiter(void 0, void 0, v
                 parentId: parentId !== null && parentId !== void 0 ? parentId : null,
                 conditions: conditions !== null && conditions !== void 0 ? conditions : [],
                 options: (options === null || options === void 0 ? void 0 : options.length)
-                    ? { create: options.map((value, index) => ({ value, order: index })) }
+                    ? { create: options.map((opt, index) => {
+                            const { value, weights } = parseOption(opt);
+                            return { value, order: index, weights };
+                        }) }
                     : undefined,
             },
             include: { options: { orderBy: { order: 'asc' } } },
@@ -152,19 +155,31 @@ exports.adminQuestionsRouter.delete('/:id', (req, res) => __awaiter(void 0, void
         res.status(500).json({ error: 'Failed to delete question' });
     }
 }));
-// ── Answer options ───────────────────────────────────────────────────────────
+function parseOption(opt) {
+    var _a;
+    if (typeof opt === 'string')
+        return { value: opt, weights: {} };
+    return { value: opt.value, weights: (_a = opt.weights) !== null && _a !== void 0 ? _a : {} };
+}
 // PUT /api/admin/questions/:id/options — replace all options for a question
+// Accepts options as string[] or {value, weights?}[]
 exports.adminQuestionsRouter.put('/:id/options', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { options } = req.body;
     if (!Array.isArray(options)) {
-        res.status(400).json({ error: 'options must be an array of strings' });
+        res.status(400).json({ error: 'options must be an array' });
         return;
     }
     try {
         // Delete existing options, then recreate
         yield db_1.prisma.answerOption.deleteMany({ where: { questionId: req.params.id } });
+        const parsed = options.map(parseOption);
         const created = yield db_1.prisma.answerOption.createMany({
-            data: options.map((value, index) => ({ questionId: req.params.id, value, order: index })),
+            data: parsed.map(({ value, weights }, index) => ({
+                questionId: req.params.id,
+                value,
+                order: index,
+                weights,
+            })),
         });
         res.json({ count: created.count });
     }

@@ -16,12 +16,14 @@ import {
 import {
   Answer,
   ConsultationAnswer,
+  OptionWeightsMap,
   getPainScale,
   getRusQuestionsAndAnswers,
   processAnswers,
   processResultDiagnosis,
   secondProcessAnswers,
 } from './process-answers';
+import { prisma } from './db';
 import { sendMailWithPDF } from './transporter';
 import { generatePDF } from './generate-pdf';
 import { sendLeadToBitrix } from './bitrix';
@@ -99,11 +101,27 @@ type PostTestResultsRequest = {
   answers?: { question: string; answers: string[] }[];
 };
 
-app.post('/postTestResults', (req: SubmitRequest, res: Response) => {
+app.post('/postTestResults', async (req: SubmitRequest, res: Response) => {
   const answers = req.body;
+
+  // Build option weights map from DB
+  const questionIds = answers.map((a) => a.questionId);
+  const dbOptions = await prisma.answerOption.findMany({
+    where: { questionId: { in: questionIds } },
+    select: { questionId: true, value: true, weights: true },
+  });
+  const optionWeights: OptionWeightsMap = new Map();
+  for (const opt of dbOptions) {
+    const w = opt.weights as Record<string, number>;
+    const hasWeight = Object.values(w).some((v) => v !== 0);
+    if (hasWeight) {
+      optionWeights.set(`${opt.questionId}::${opt.value}`, w);
+    }
+  }
+
   const startDiagnosis = { ...START_DIAGNOSIS };
-  const firstProcessDiagnosis = processAnswers(startDiagnosis, answers);
-  const secondProcessDiagnosis = secondProcessAnswers(firstProcessDiagnosis, answers);
+  const firstProcessDiagnosis = processAnswers(startDiagnosis, answers, optionWeights);
+  const secondProcessDiagnosis = secondProcessAnswers(firstProcessDiagnosis, answers, optionWeights);
 
   let htmlContent = '';
   const extendedDiagnosis = `

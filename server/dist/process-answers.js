@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRusQuestionsAndAnswers = exports.processResultDiagnosis = exports.getPainScale = exports.secondProcessAnswers = exports.processAnswers = void 0;
 const constants_1 = require("./constants");
-function processAnswers(startDiagnosis, answers) {
+function processAnswers(startDiagnosis, answers, optionWeights) {
     const diagnosis = Object.assign({}, startDiagnosis);
     answers.forEach(({ questionId, questionAnswers }) => {
         if (questionId === "age") {
@@ -78,10 +78,31 @@ function processAnswers(startDiagnosis, answers) {
             processNeurosisSymptoms(diagnosis, questionAnswers, answers);
         }
     });
+    if (optionWeights) {
+        answers.forEach(({ questionId, questionAnswers }) => {
+            questionAnswers.forEach((value) => {
+                const w = optionWeights.get(`${questionId}::${value}`);
+                if (w) {
+                    if (w.neurosis)
+                        diagnosis.neurosis += w.neurosis;
+                    if (w.muscles)
+                        diagnosis.muscles += w.muscles;
+                    if (w.hernia)
+                        diagnosis.hernia += w.hernia;
+                    if (w.arthrosis)
+                        diagnosis.arthrosis += w.arthrosis;
+                    if (w.stenosis)
+                        diagnosis.stenosis += w.stenosis;
+                    if (w.inflammation)
+                        diagnosis.inflammation += w.inflammation;
+                }
+            });
+        });
+    }
     return diagnosis;
 }
 exports.processAnswers = processAnswers;
-function secondProcessAnswers(firstDiagnosis, answers) {
+function secondProcessAnswers(firstDiagnosis, answers, optionWeights) {
     if (firstDiagnosis.neurosis === 0) {
         const updatedAnswers = answers.map(answer => {
             if (answer.questionId === "pain_scale") {
@@ -92,7 +113,7 @@ function secondProcessAnswers(firstDiagnosis, answers) {
             }
         });
         const startDiagnosis = Object.assign({}, constants_1.START_DIAGNOSIS);
-        return processAnswers(startDiagnosis, updatedAnswers);
+        return processAnswers(startDiagnosis, updatedAnswers, optionWeights);
     }
     else if (firstDiagnosis.neurosis < 4) {
         return firstDiagnosis;
@@ -110,7 +131,7 @@ function secondProcessAnswers(firstDiagnosis, answers) {
                 return Object.assign(Object.assign({}, answer), { questionAnswers: [...answer.questionAnswers] });
             }
         });
-        return processAnswers(startDiagnosis, updatedAnswers);
+        return processAnswers(startDiagnosis, updatedAnswers, optionWeights);
     }
 }
 exports.secondProcessAnswers = secondProcessAnswers;

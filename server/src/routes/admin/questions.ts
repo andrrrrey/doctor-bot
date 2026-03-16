@@ -66,7 +66,10 @@ adminQuestionsRouter.post('/', async (req: Request, res: Response) => {
         parentId: parentId ?? null,
         conditions: conditions ?? [],
         options: options?.length
-          ? { create: (options as string[]).map((value: string, index: number) => ({ value, order: index })) }
+          ? { create: (options as OptionInput[]).map((opt, index) => {
+              const { value, weights } = parseOption(opt);
+              return { value, order: index, weights };
+            }) }
           : undefined,
       },
       include: { options: { orderBy: { order: 'asc' } } },
@@ -162,20 +165,34 @@ adminQuestionsRouter.delete('/:id', async (req: Request, res: Response) => {
 
 // ── Answer options ───────────────────────────────────────────────────────────
 
+type OptionInput = string | { value: string; weights?: Record<string, number> };
+
+function parseOption(opt: OptionInput): { value: string; weights: Record<string, number> } {
+  if (typeof opt === 'string') return { value: opt, weights: {} };
+  return { value: opt.value, weights: opt.weights ?? {} };
+}
+
 // PUT /api/admin/questions/:id/options — replace all options for a question
+// Accepts options as string[] or {value, weights?}[]
 adminQuestionsRouter.put('/:id/options', async (req: Request, res: Response) => {
-  const { options } = req.body as { options: string[] };
+  const { options } = req.body as { options: OptionInput[] };
 
   if (!Array.isArray(options)) {
-    res.status(400).json({ error: 'options must be an array of strings' });
+    res.status(400).json({ error: 'options must be an array' });
     return;
   }
 
   try {
     // Delete existing options, then recreate
     await prisma.answerOption.deleteMany({ where: { questionId: req.params.id } });
+    const parsed = options.map(parseOption);
     const created = await prisma.answerOption.createMany({
-      data: options.map((value, index) => ({ questionId: req.params.id, value, order: index })),
+      data: parsed.map(({ value, weights }, index) => ({
+        questionId: req.params.id,
+        value,
+        order: index,
+        weights,
+      })),
     });
     res.json({ count: created.count });
   } catch (err) {

@@ -39,6 +39,7 @@ model AnswerOption {
   questionId String
   value      String
   order      Int
+  weights    Json     @default("{}")
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
