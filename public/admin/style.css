@@ -701,6 +701,85 @@ tr.drag-over td { background: var(--primary-light); }
   font-size: 13px;
 }
 
+.option-base-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.base-row-label {
+  color: #3b82f6;
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.base-cell {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--gray-500);
+  font-size: 11px;
+}
+
+.base-cell-label {
+  color: var(--gray-400);
+}
+
+.bw-zero  { color: var(--gray-300); }
+.bw-pos   { color: #2563eb; font-weight: 700; }
+.bw-neg   { color: #dc2626; font-weight: 700; }
+
+.option-weights-wrap {
+  margin-top: 2px;
+}
+
+.option-weights-wrap-label {
+  display: block;
+  font-size: 11px;
+  color: var(--gray-400);
+  margin-bottom: 4px;
+}
+
+/* ── Hardcoded logic banners ── */
+.hardcoded-banner {
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.hardcoded-banner-warn {
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+}
+
+.hardcoded-banner-info {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0c4a6e;
+}
+
+.hardcoded-banner-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.hardcoded-banner-note {
+  color: inherit;
+  opacity: 0.9;
+}
+
 /* ═══ RESPONSIVE ════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   :root { --sidebar-width: 0px; }
