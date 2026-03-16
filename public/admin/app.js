@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSubmissionFilters();
   setupStatsFilters();
   setupSettings();
+  setupVersions();
 });
 
 // ── Auth ─────────────────────────────────────────────────────────
@@ -138,7 +139,7 @@ function setupNavigation() {
 }
 
 function navigateTo(section) {
-  const valid = ['questions', 'submissions', 'stats', 'settings'];
+  const valid = ['questions', 'submissions', 'stats', 'versions', 'settings'];
   if (!valid.includes(section)) section = 'questions';
 
   history.replaceState(null, '', `#${section}`);
@@ -154,6 +155,7 @@ function navigateTo(section) {
   if (section === 'questions') loadQuestions();
   else if (section === 'submissions') loadSubmissions();
   else if (section === 'stats') loadStats();
+  else if (section === 'versions') loadVersions();
   else if (section === 'settings') loadSettings();
 }
 
@@ -1088,6 +1090,134 @@ async function changePassword() {
   } finally {
     btn.disabled = false;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// VERSIONS SECTION
+// ═══════════════════════════════════════════════════════════════════
+
+function setupVersions() {
+  document.getElementById('save-version-btn').addEventListener('click', () => {
+    document.getElementById('version-description-input').value = '';
+    openModal('save-version-modal');
+  });
+
+  document.getElementById('confirm-save-version-btn').addEventListener('click', async () => {
+    const description = document.getElementById('version-description-input').value.trim();
+    const btn = document.getElementById('confirm-save-version-btn');
+    btn.disabled = true;
+    try {
+      await post('/versions', { description: description || undefined });
+      closeModal('save-version-modal');
+      toast('Версия сохранена');
+      loadVersions();
+    } catch (err) {
+      toast('Ошибка: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+async function loadVersions() {
+  const tbody = document.getElementById('versions-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Загрузка...</td></tr>';
+
+  try {
+    const data = await get('/versions');
+    renderVersions(data.versions);
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell" style="color:var(--danger)">Ошибка: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+function renderVersions(versions) {
+  const tbody = document.getElementById('versions-tbody');
+
+  if (!versions.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Версий ещё нет. Они создаются автоматически при поступлении заявок или вручную.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = versions.map((v) => `
+    <tr>
+      <td><strong>v${esc(v.version)}</strong></td>
+      <td style="color:var(--gray-600)">${v.description ? esc(v.description) : '<span style="color:var(--gray-400)">—</span>'}</td>
+      <td style="text-align:center">${v.submissionCount}</td>
+      <td style="font-size:12px;color:var(--gray-500)">${new Date(v.createdAt).toLocaleString('ru-RU')}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="viewVersion('${esc(v.id)}', ${v.version})">Просмотр</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function viewVersion(id, versionNumber) {
+  document.getElementById('version-modal-title').textContent = `Версия опросника v${versionNumber}`;
+  document.getElementById('version-detail').innerHTML = '<div class="loading-cell">Загрузка...</div>';
+  openModal('version-modal');
+
+  try {
+    const data = await get(`/versions/${id}`);
+    renderVersionDetail(data);
+  } catch (err) {
+    document.getElementById('version-detail').innerHTML = `<div style="color:var(--danger)">Ошибка: ${esc(err.message)}</div>`;
+  }
+}
+
+function renderVersionDetail(v) {
+  const snapshot = Array.isArray(v.snapshot) ? v.snapshot : [];
+  const activeQuestions = snapshot.filter((q) => q.isActive);
+  const inactiveQuestions = snapshot.filter((q) => !q.isActive);
+
+  const renderQuestion = (q) => {
+    const optionsHtml = q.options && q.options.length
+      ? `<ul style="margin:4px 0 0 0;padding-left:16px;font-size:12px;color:var(--gray-500)">
+          ${q.options.map((o) => {
+            const hasWeights = o.weights && Object.values(o.weights).some((w) => w !== 0);
+            const weightsStr = hasWeights
+              ? ` <span style="color:var(--primary);font-size:11px">[${Object.entries(o.weights).filter(([,w]) => w !== 0).map(([k,w]) => `${k}:${w > 0 ? '+' : ''}${w}`).join(', ')}]</span>`
+              : '';
+            return `<li>${esc(o.value)}${weightsStr}</li>`;
+          }).join('')}
+        </ul>`
+      : '';
+
+    return `
+      <div style="padding:8px 0;border-bottom:1px solid var(--gray-100)">
+        <div style="display:flex;gap:8px;align-items:baseline">
+          <span style="font-size:11px;color:var(--gray-400);min-width:28px">#${q.order}</span>
+          <span class="type-badge" style="font-size:10px">${esc(q.type)}</span>
+          <span style="font-size:12px;color:var(--gray-500)">${esc(q.id)}</span>
+          ${q.parentId ? `<span style="font-size:11px;color:var(--gray-400)">↳ ${esc(q.parentId)}</span>` : ''}
+        </div>
+        <div style="margin-top:4px;font-size:13px">${stripHTML(q.question)}</div>
+        ${optionsHtml}
+      </div>
+    `;
+  };
+
+  document.getElementById('version-detail').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="display:flex;gap:16px;font-size:13px;color:var(--gray-500);margin-bottom:12px">
+        <span>Дата: <strong>${new Date(v.createdAt).toLocaleString('ru-RU')}</strong></span>
+        <span>Заявок: <strong>${v.submissionCount}</strong></span>
+        <span>Активных вопросов: <strong>${activeQuestions.length}</strong></span>
+        <span>Скрытых: <strong>${inactiveQuestions.length}</strong></span>
+      </div>
+      ${v.description ? `<div style="font-size:13px;color:var(--gray-600);padding:8px 12px;background:var(--gray-50);border-radius:6px;margin-bottom:12px">${esc(v.description)}</div>` : ''}
+    </div>
+
+    <h4 style="margin:0 0 8px;font-size:14px">Активные вопросы (${activeQuestions.length})</h4>
+    <div style="margin-bottom:16px">
+      ${activeQuestions.length ? activeQuestions.map(renderQuestion).join('') : '<div style="color:var(--gray-400);font-size:13px">Нет</div>'}
+    </div>
+
+    ${inactiveQuestions.length ? `
+    <h4 style="margin:0 0 8px;font-size:14px;color:var(--gray-400)">Скрытые вопросы (${inactiveQuestions.length})</h4>
+    <div>${inactiveQuestions.map(renderQuestion).join('')}</div>
+    ` : ''}
+  `;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────

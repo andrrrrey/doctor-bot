@@ -36,6 +36,7 @@ import { adminQuestionsRouter } from './routes/admin/questions';
 import { adminSubmissionsRouter } from './routes/admin/submissions';
 import { adminStatsRouter } from './routes/admin/stats';
 import { adminSettingsRouter } from './routes/admin/settings';
+import { adminVersionsRouter } from './routes/admin/versions';
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -83,6 +84,7 @@ app.use('/api/admin/questions', adminQuestionsRouter);
 app.use('/api/admin/submissions', adminSubmissionsRouter);
 app.use('/api/admin/stats', adminStatsRouter);
 app.use('/api/admin/settings', adminSettingsRouter);
+app.use('/api/admin/versions', adminVersionsRouter);
 
 // ── Legacy routes (kept for backward compatibility with Telegram bot) ────────
 

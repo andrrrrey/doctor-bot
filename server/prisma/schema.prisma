@@ -54,9 +54,11 @@ model Session {
 }
 
 model Submission {
-  id                String   @id @default(uuid())
+  id                String                @id @default(uuid())
   sessionId         String
-  session           Session  @relation(fields: [sessionId], references: [id])
+  session           Session               @relation(fields: [sessionId], references: [id])
+  versionId         String?
+  version           QuestionnaireVersion? @relation(fields: [versionId], references: [id])
   patientName       String?
   patientPhone      String?
   patientCity       String?
@@ -65,9 +67,19 @@ model Submission {
   answers           Json
   fileUrl           String?
   fileName          String?
-  bitrixStatus      String   @default("pending")
+  bitrixStatus      String                @default("pending")
   bitrixError       String?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime              @default(now())
+}
+
+model QuestionnaireVersion {
+  id          String       @id @default(cuid())
+  version     Int          @unique
+  description String?
+  snapshot    Json
+  hash        String       @unique
+  createdAt   DateTime     @default(now())
+  submissions Submission[]
 }
 
 model Setting {
