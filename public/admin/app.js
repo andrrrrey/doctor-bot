@@ -310,6 +310,145 @@ async function deleteQuestion(id) {
 }
 
 // ── Question Form Modal ──────────────────────────────────────────
+
+// Описание захардкоженной логики для существующих вопросов.
+// options: веса по каждому конкретному варианту ответа (справочно, не редактируются здесь).
+// note: текстовое описание условной логики, которую нельзя свести к простым весам.
+const HARDCODED_LOGIC = {
+  age: {
+    note: 'Условная логика по возрасту пациента: ≤25 → Мышцы+2; 26–34 → Грыжа+2, Мышцы+1; 35–39 → Артроз+1; 40–47 → Артроз+1, Грыжа+1, Мышцы-1; 48–59 → Артроз+2, Стеноз+1, Мышцы-2; ≥60 → Артроз+3, Стеноз+2, Грыжа-1, Мышцы-3. Если занимался спортом 10+ лет — к возрасту прибавляется 7.',
+  },
+  pain_scale: {
+    note: 'Боль ≥6 → Грыжа+1.',
+  },
+  pain_location: {
+    note: 'Условная логика по комбинации выбранных мест боли: все 6 поясничных/крестцовых → Грыжа+1; боль в паху → Артроз+2; обе ноги → Грыжа-2, Мышцы+1; одна нога → Грыжа+2; одна ягодица → Грыжа+1; поясница без ног → Артроз+1; центр поясницы → Грыжа+1.',
+  },
+  leg_pain: {
+    options: {
+      'Да': { hernia: 3 },
+    },
+  },
+  pain_image: {
+    options: {
+      'Разовая и не проходящая':        { hernia: 1, muscles: -2 },
+      'Нарастающая со временем':        { arthrosis: 2, stenosis: 2 },
+      'Скачкообразная, то есть, то нет': { muscles: 2 },
+    },
+  },
+  morning_pain: {
+    note: 'Баллы Грыжа/Артроз/Стеноз прибавляются только если они уже >0.',
+    options: {
+      'Да':  { hernia: 2, arthrosis: 2, stenosis: 2, inflammation: 1 },
+      'Нет': { hernia: -1, arthrosis: -1 },
+    },
+  },
+  night_pain: {
+    note: 'Если утром боль тоже "Да" — блок Грыжа/Артроз/Стеноз+2 пропускается.',
+    options: {
+      'Да, только когда переварачиваюсь': { hernia: 1, arthrosis: 1 },
+      'Да':                               { inflammation: 1, hernia: 2, arthrosis: 2, stenosis: 2 },
+    },
+  },
+  pain_nature: {
+    options: {
+      'Спонтанная, возникает в состоянии покоя': { hernia: 2, arthrosis: 2, inflammation: 1 },
+      'Механическая, провоцируется движением':   { muscles: 2 },
+    },
+  },
+  dn4: {
+    note: '"Ничего из вышеперечисленного" → Грыжа-4; онемение или мурашки → Грыжа+2; 2 и более симптомов → Грыжа+2.',
+  },
+  walking: {
+    options: {
+      'Нет': { stenosis: 4 },
+    },
+  },
+  walk_frequency: {
+    note: 'Стеноз+1 и Грыжа+1 применяются только если их текущий балл >0.',
+    options: {
+      'Нет': { stenosis: 1, hernia: 1 },
+      'Да':  { stenosis: -6 },
+    },
+  },
+  pain_while_walking: {
+    options: {
+      'Да': { stenosis: 1 },
+    },
+  },
+  sit_without_pain: {
+    note: 'Условная логика: зависит от ответа на вопрос "Можете ли пройти остановку". Если "Да" + сидеть нет → Грыжа+2, Мышцы+3; сидеть да → Артроз+1, Мышцы-3. Если "Нет" + сидеть нет → Грыжа+2, Стеноз-3; сидеть да → Стеноз+2, Мышцы-2.',
+  },
+  stand_without_pain: {
+    note: 'Мышцы+1 и Артроз+1 применяются только если их текущий балл >0.',
+    options: {
+      'Нет': { muscles: 1, stenosis: 1, hernia: 1 },
+      'Да':  { arthrosis: 1 },
+    },
+  },
+  lift_groceries: {
+    note: 'Артроз+1 и Стеноз+1 при "Да" применяются только если их текущий балл >0.',
+    options: {
+      'Нет': { muscles: 2, hernia: 2 },
+      'Да':  { arthrosis: 1, stenosis: 1, muscles: -1 },
+    },
+  },
+  symptoms_duration: {
+    note: 'При "Больше года" и "Больше трёх лет" — баллы применяются только если текущий показатель >0.',
+    options: {
+      'До месяца':        { hernia: 2, stenosis: -2, arthrosis: -2 },
+      'До полугода':      { hernia: 2, stenosis: -2, arthrosis: -1 },
+      'Больше года':      { muscles: 2, hernia: 2, arthrosis: 2, stenosis: 2, neurosis: 2 },
+      'Больше трех лет':  { arthrosis: 2, stenosis: 2, muscles: 2 },
+    },
+  },
+  spine_operation: {
+    note: 'Баллы применяются только если текущий показатель >0.',
+    options: {
+      'Да': { muscles: 2, hernia: 2, arthrosis: 2, stenosis: 2 },
+    },
+  },
+  current_flare_duration: {
+    options: {
+      'До недели':    { muscles: 2, arthrosis: 1, hernia: -3 },
+      'До трех недель': { arthrosis: 2 },
+      'До 5 месяцев': { hernia: 2, stenosis: 2 },
+    },
+  },
+  researches: {
+    note: '"Рентген с функциональными пробами" → Артроз+2, Стеноз+2, Грыжа-1. Если выбрано 4+ исследования → Стресс+2 и все показатели +2 (только если >0).',
+  },
+  lumbar_mri_count: {
+    options: {
+      'Да': { hernia: 2, muscles: -1 },
+    },
+  },
+  neurosurgeon_consultation: {
+    options: {
+      'Да': { hernia: 1, stenosis: 1, muscles: -2 },
+    },
+  },
+  trauma_or_sudden_onset: {
+    note: 'Условная логика: если симптомы "Больше трёх лет" — блок пропускается. При травме/внезапном начале → Грыжа+2, Мышцы+1, Артроз+1 (если >0). Иначе → Стеноз+1, Артроз+1, Мышцы+1 (если >0).',
+  },
+  sudden_onset: {
+    note: 'Используется совместно с вопросом о травме (trauma_or_sudden_onset).',
+  },
+  stress_related_flare: {
+    note: 'Грыжа+1, Стеноз+1, Артроз+1 при "Нет" применяются только если их текущий балл >0.',
+    options: {
+      'Нет': { hernia: 1, stenosis: 1, arthrosis: 1 },
+      'Да':  { muscles: 2 },
+    },
+  },
+  neurosis_symptoms: {
+    note: 'Считается количество выбранных симптомов (без пункта "Ничего"). Если делали МРТ головы — счётчик +1. При 4+ симптомах → Стресс+9.',
+  },
+  head_mri: {
+    note: 'Используется внутри логики вопроса "neurosis_symptoms": при ответе "Да" счётчик стресс-симптомов увеличивается на 1.',
+  },
+};
+
 const WEIGHT_KEYS = [
   { key: 'neurosis',    label: 'Стресс' },
   { key: 'muscles',     label: 'Мышцы' },
@@ -319,10 +458,18 @@ const WEIGHT_KEYS = [
   { key: 'inflammation', label: 'Воспал.' },
 ];
 
-function makeOptionRow(value = '', weights = {}) {
+function fmtBaseWeight(val) {
+  if (!val) return '<span class="bw-zero">0</span>';
+  return val > 0
+    ? `<span class="bw-pos">+${val}</span>`
+    : `<span class="bw-neg">${val}</span>`;
+}
+
+function makeOptionRow(value = '', weights = {}, baseWeights = null) {
   const row = document.createElement('div');
   row.className = 'option-row';
 
+  // — text + remove button —
   const textRow = document.createElement('div');
   textRow.className = 'option-text-row';
   const input = document.createElement('input');
@@ -330,7 +477,6 @@ function makeOptionRow(value = '', weights = {}) {
   input.className = 'opt-value';
   input.placeholder = 'Текст варианта';
   input.value = value;
-
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
   removeBtn.className = 'btn btn-ghost btn-sm';
@@ -338,13 +484,32 @@ function makeOptionRow(value = '', weights = {}) {
   removeBtn.title = 'Удалить вариант';
   removeBtn.textContent = '✕';
   removeBtn.addEventListener('click', () => row.remove());
-
   textRow.appendChild(input);
   textRow.appendChild(removeBtn);
+  row.appendChild(textRow);
 
+  // — base weights reference row (read-only) —
+  if (baseWeights) {
+    const baseRow = document.createElement('div');
+    baseRow.className = 'option-base-row';
+    baseRow.innerHTML = '<span class="base-row-label">Базовая логика:</span>' +
+      WEIGHT_KEYS.map(({ key, label }) =>
+        `<span class="base-cell"><span class="base-cell-label">${label}</span>${fmtBaseWeight(baseWeights[key] || 0)}</span>`
+      ).join('');
+    row.appendChild(baseRow);
+  }
+
+  // — editable extra weights —
+  const weightsWrap = document.createElement('div');
+  weightsWrap.className = 'option-weights-wrap';
+  if (baseWeights) {
+    const lbl = document.createElement('span');
+    lbl.className = 'option-weights-wrap-label';
+    lbl.textContent = 'Доп. веса из админки:';
+    weightsWrap.appendChild(lbl);
+  }
   const weightsRow = document.createElement('div');
   weightsRow.className = 'option-weights-row';
-
   WEIGHT_KEYS.forEach(({ key, label }) => {
     const cell = document.createElement('div');
     cell.className = 'option-weight-cell';
@@ -359,9 +524,9 @@ function makeOptionRow(value = '', weights = {}) {
     cell.appendChild(numInput);
     weightsRow.appendChild(cell);
   });
+  weightsWrap.appendChild(weightsRow);
+  row.appendChild(weightsWrap);
 
-  row.appendChild(textRow);
-  row.appendChild(weightsRow);
   return row;
 }
 
@@ -413,6 +578,54 @@ function updateOptionsVisibility() {
   document.getElementById('qf-options-section').classList.toggle('hidden', !showOptions);
 }
 
+function renderHardcodedBanner(questionId) {
+  const el = document.getElementById('qf-hardcoded-note');
+  if (!el) return;
+
+  if (!questionId) {
+    // New question
+    el.innerHTML = `
+      <div class="hardcoded-banner hardcoded-banner-info">
+        <strong>Новый вопрос</strong> — диагноз будет формироваться <strong>только на основе весов из таблицы ниже</strong>.
+        Захардкоженной логики для него нет. Убедитесь, что задали нужные веса для каждого варианта ответа.
+      </div>`;
+    return;
+  }
+
+  const hInfo = HARDCODED_LOGIC[questionId];
+  if (!hInfo) {
+    // Existing question without hardcoded logic (e.g., added via admin)
+    el.innerHTML = `
+      <div class="hardcoded-banner hardcoded-banner-info">
+        Этот вопрос не имеет встроенной логики. Диагноз определяется <strong>только весами ниже</strong>.
+      </div>`;
+    return;
+  }
+
+  const hasPerOption = Boolean(hInfo.options);
+  let html = `<div class="hardcoded-banner hardcoded-banner-warn">
+    <div class="hardcoded-banner-title">⚙ Встроенная логика</div>`;
+
+  if (hInfo.note) {
+    html += `<div class="hardcoded-banner-note">${esc(hInfo.note)}</div>`;
+  }
+
+  if (hasPerOption) {
+    html += `<div class="hardcoded-banner-note" style="margin-top:4px">
+      Базовые баллы для каждого варианта показаны в строке <em>«Базовая логика»</em> ниже — только для справки, не редактируются здесь.
+      <strong>Доп. веса</strong> из таблицы суммируются с ними.
+    </div>`;
+  } else {
+    html += `<div class="hardcoded-banner-note" style="margin-top:4px">
+      Логика условная и не сводится к простым весам per-option — управлять ею через таблицу невозможно.
+      <strong>Доп. веса</strong> из таблицы всё равно суммируются с результатом.
+    </div>`;
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function openQuestionModal(questionId) {
   const isEdit = questionId !== null;
   document.getElementById('question-modal-title').textContent = isEdit ? 'Редактировать вопрос' : 'Новый вопрос';
@@ -422,6 +635,8 @@ function openQuestionModal(questionId) {
   document.getElementById('qf-id-original').value = '';
   document.getElementById('qf-conditions-row').classList.add('hidden');
   document.getElementById('qf-options-list').innerHTML = '';
+  const noteEl = document.getElementById('qf-hardcoded-note');
+  if (noteEl) noteEl.innerHTML = '';
 
   // Populate parent select
   const parentSelect = document.getElementById('qf-parent');
@@ -441,7 +656,7 @@ function openQuestionModal(questionId) {
 
     document.getElementById('qf-id-original').value = q.id;
     document.getElementById('qf-id').value = q.id;
-    document.getElementById('qf-id').disabled = true; // can't change ID of existing
+    document.getElementById('qf-id').disabled = true;
     document.getElementById('qf-question').value = q.question;
     document.getElementById('qf-type').value = q.type;
     document.getElementById('qf-order').value = q.order;
@@ -453,13 +668,22 @@ function openQuestionModal(questionId) {
       document.getElementById('qf-conditions').value = (q.conditions || []).join('\n');
     }
 
+    // Show hardcoded logic banner
+    renderHardcodedBanner(q.id);
+
     const optList = document.getElementById('qf-options-list');
     optList.innerHTML = '';
     if (q.options?.length) {
-      q.options.forEach((o) => optList.appendChild(makeOptionRow(o.value, o.weights || {})));
+      const hInfo = HARDCODED_LOGIC[q.id];
+      q.options.forEach((o) => {
+        const baseWeights = hInfo?.options?.[o.value] || null;
+        optList.appendChild(makeOptionRow(o.value, o.weights || {}, baseWeights));
+      });
     }
   } else {
     document.getElementById('qf-id').disabled = false;
+    // New question — show informational note
+    renderHardcodedBanner(null);
   }
 
   updateOptionsVisibility();
