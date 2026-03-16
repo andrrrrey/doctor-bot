@@ -18,6 +18,7 @@ const path_1 = __importDefault(require("path"));
 const express_1 = __importDefault(require("express"));
 const constants_1 = require("./constants");
 const process_answers_1 = require("./process-answers");
+const db_1 = require("./db");
 const transporter_1 = require("./transporter");
 const generate_pdf_1 = require("./generate-pdf");
 const bitrix_1 = require("./bitrix");
@@ -73,11 +74,25 @@ app.use('/api/admin/settings', settings_2.adminSettingsRouter);
 app.get('/survey', (_req, res) => {
     res.json({ questions: constants_1.QUESTIONS });
 });
-app.post('/postTestResults', (req, res) => {
+app.post('/postTestResults', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const answers = req.body;
+    // Build option weights map from DB
+    const questionIds = answers.map((a) => a.questionId);
+    const dbOptions = yield db_1.prisma.answerOption.findMany({
+        where: { questionId: { in: questionIds } },
+        select: { questionId: true, value: true, weights: true },
+    });
+    const optionWeights = new Map();
+    for (const opt of dbOptions) {
+        const w = opt.weights;
+        const hasWeight = Object.values(w).some((v) => v !== 0);
+        if (hasWeight) {
+            optionWeights.set(`${opt.questionId}::${opt.value}`, w);
+        }
+    }
     const startDiagnosis = Object.assign({}, constants_1.START_DIAGNOSIS);
-    const firstProcessDiagnosis = (0, process_answers_1.processAnswers)(startDiagnosis, answers);
-    const secondProcessDiagnosis = (0, process_answers_1.secondProcessAnswers)(firstProcessDiagnosis, answers);
+    const firstProcessDiagnosis = (0, process_answers_1.processAnswers)(startDiagnosis, answers, optionWeights);
+    const secondProcessDiagnosis = (0, process_answers_1.secondProcessAnswers)(firstProcessDiagnosis, answers, optionWeights);
     let htmlContent = '';
     const extendedDiagnosis = `
     Нервоз: ${secondProcessDiagnosis.neurosis}
@@ -107,7 +122,7 @@ app.post('/postTestResults', (req, res) => {
         result.answers = rusAnswers;
     }
     res.json(result);
-});
+}));
 app.post('/postConsultationData', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { patientName, patientPhone, patientCity, diagnosis, answers, extendedDiagnosis } = req.body;
     try {

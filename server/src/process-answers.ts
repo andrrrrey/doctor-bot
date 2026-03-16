@@ -5,6 +5,18 @@ export type Answer = {
   questionAnswers: string[];
 }
 
+export type OptionWeights = {
+  neurosis?: number;
+  muscles?: number;
+  hernia?: number;
+  arthrosis?: number;
+  stenosis?: number;
+  inflammation?: number;
+};
+
+// key: `${questionId}::${optionValue}`
+export type OptionWeightsMap = Map<string, OptionWeights>;
+
 export type RusAnswers = {
   question: string;
   answers: string[];
@@ -30,7 +42,7 @@ type Diagnosis = {
 
 type DiagnosisKey = Extract<keyof Diagnosis, 'muscles' | 'hernia' | 'arthrosis' | 'stenosis'>;
 
-export function processAnswers(startDiagnosis: Diagnosis, answers: Answer[]) {
+export function processAnswers(startDiagnosis: Diagnosis, answers: Answer[], optionWeights?: OptionWeightsMap) {
   const diagnosis = { ...startDiagnosis };
 
   answers.forEach(({ questionId, questionAnswers }) => {
@@ -108,10 +120,26 @@ export function processAnswers(startDiagnosis: Diagnosis, answers: Answer[]) {
     }
   });
 
+  if (optionWeights) {
+    answers.forEach(({ questionId, questionAnswers }) => {
+      questionAnswers.forEach((value) => {
+        const w = optionWeights.get(`${questionId}::${value}`);
+        if (w) {
+          if (w.neurosis) diagnosis.neurosis += w.neurosis;
+          if (w.muscles) diagnosis.muscles += w.muscles;
+          if (w.hernia) diagnosis.hernia += w.hernia;
+          if (w.arthrosis) diagnosis.arthrosis += w.arthrosis;
+          if (w.stenosis) diagnosis.stenosis += w.stenosis;
+          if (w.inflammation) diagnosis.inflammation += w.inflammation;
+        }
+      });
+    });
+  }
+
   return diagnosis;
 }
 
-export function secondProcessAnswers(firstDiagnosis: Diagnosis, answers: Answer[]) {
+export function secondProcessAnswers(firstDiagnosis: Diagnosis, answers: Answer[], optionWeights?: OptionWeightsMap) {
   if (firstDiagnosis.neurosis === 0) {
     const updatedAnswers = answers.map(answer => {
       if (answer.questionId === "pain_scale") {
@@ -129,7 +157,7 @@ export function secondProcessAnswers(firstDiagnosis: Diagnosis, answers: Answer[
 
     const startDiagnosis = { ...START_DIAGNOSIS };
 
-    return processAnswers(startDiagnosis, updatedAnswers);
+    return processAnswers(startDiagnosis, updatedAnswers, optionWeights);
   }
   else if (firstDiagnosis.neurosis < 4) {
     return firstDiagnosis;
@@ -164,7 +192,7 @@ export function secondProcessAnswers(firstDiagnosis: Diagnosis, answers: Answer[
       }
     });
 
-    return processAnswers(startDiagnosis, updatedAnswers);
+    return processAnswers(startDiagnosis, updatedAnswers, optionWeights);
   }
 }
 

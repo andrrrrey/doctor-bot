@@ -310,6 +310,80 @@ async function deleteQuestion(id) {
 }
 
 // ── Question Form Modal ──────────────────────────────────────────
+const WEIGHT_KEYS = [
+  { key: 'neurosis',    label: 'Стресс' },
+  { key: 'muscles',     label: 'Мышцы' },
+  { key: 'hernia',      label: 'Грыжа' },
+  { key: 'arthrosis',   label: 'Артроз' },
+  { key: 'stenosis',    label: 'Стеноз' },
+  { key: 'inflammation', label: 'Воспал.' },
+];
+
+function makeOptionRow(value = '', weights = {}) {
+  const row = document.createElement('div');
+  row.className = 'option-row';
+
+  const textRow = document.createElement('div');
+  textRow.className = 'option-text-row';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'opt-value';
+  input.placeholder = 'Текст варианта';
+  input.value = value;
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'btn btn-ghost btn-sm';
+  removeBtn.style.color = 'var(--danger)';
+  removeBtn.title = 'Удалить вариант';
+  removeBtn.textContent = '✕';
+  removeBtn.addEventListener('click', () => row.remove());
+
+  textRow.appendChild(input);
+  textRow.appendChild(removeBtn);
+
+  const weightsRow = document.createElement('div');
+  weightsRow.className = 'option-weights-row';
+
+  WEIGHT_KEYS.forEach(({ key, label }) => {
+    const cell = document.createElement('div');
+    cell.className = 'option-weight-cell';
+    const span = document.createElement('span');
+    span.textContent = label;
+    const numInput = document.createElement('input');
+    numInput.type = 'number';
+    numInput.className = `opt-w opt-${key}`;
+    numInput.value = weights[key] ?? 0;
+    numInput.step = '1';
+    cell.appendChild(span);
+    cell.appendChild(numInput);
+    weightsRow.appendChild(cell);
+  });
+
+  row.appendChild(textRow);
+  row.appendChild(weightsRow);
+  return row;
+}
+
+function getOptionsFromList() {
+  const list = document.getElementById('qf-options-list');
+  const rows = list.querySelectorAll('.option-row');
+  const result = [];
+  rows.forEach((row) => {
+    const value = row.querySelector('.opt-value').value.trim();
+    if (!value) return;
+    const weights = {};
+    let hasWeight = false;
+    WEIGHT_KEYS.forEach(({ key }) => {
+      const v = Number(row.querySelector(`.opt-${key}`).value) || 0;
+      weights[key] = v;
+      if (v !== 0) hasWeight = true;
+    });
+    result.push({ value, weights: hasWeight ? weights : {} });
+  });
+  return result;
+}
+
 function setupQuestionModal() {
   document.getElementById('add-question-btn').addEventListener('click', () => {
     openQuestionModal(null);
@@ -327,6 +401,10 @@ function setupQuestionModal() {
     const hasParent = document.getElementById('qf-parent').value !== '';
     document.getElementById('qf-conditions-row').classList.toggle('hidden', !hasParent);
   });
+
+  document.getElementById('qf-add-option').addEventListener('click', () => {
+    document.getElementById('qf-options-list').appendChild(makeOptionRow());
+  });
 }
 
 function updateOptionsVisibility() {
@@ -343,6 +421,7 @@ function openQuestionModal(questionId) {
   form.reset();
   document.getElementById('qf-id-original').value = '';
   document.getElementById('qf-conditions-row').classList.add('hidden');
+  document.getElementById('qf-options-list').innerHTML = '';
 
   // Populate parent select
   const parentSelect = document.getElementById('qf-parent');
@@ -374,8 +453,10 @@ function openQuestionModal(questionId) {
       document.getElementById('qf-conditions').value = (q.conditions || []).join('\n');
     }
 
+    const optList = document.getElementById('qf-options-list');
+    optList.innerHTML = '';
     if (q.options?.length) {
-      document.getElementById('qf-options').value = q.options.map((o) => o.value).join('\n');
+      q.options.forEach((o) => optList.appendChild(makeOptionRow(o.value, o.weights || {})));
     }
   } else {
     document.getElementById('qf-id').disabled = false;
@@ -403,8 +484,7 @@ async function saveQuestion() {
   const parentId = document.getElementById('qf-parent').value || null;
   const conditionsRaw = document.getElementById('qf-conditions').value.trim();
   const conditions = conditionsRaw ? conditionsRaw.split('\n').map((s) => s.trim()).filter(Boolean) : [];
-  const optionsRaw = document.getElementById('qf-options').value.trim();
-  const options = optionsRaw ? optionsRaw.split('\n').map((s) => s.trim()).filter(Boolean) : [];
+  const options = getOptionsFromList();
 
   if (!id || !question) {
     toast('Заполните обязательные поля', 'error');

@@ -342,8 +342,13 @@
         </div>
 
         <div id="qf-options-section" class="form-group">
-          <label>Варианты ответов <span class="hint">(по одному на строку)</span></label>
-          <textarea id="qf-options" rows="5" placeholder="Вариант 1&#10;Вариант 2&#10;Вариант 3"></textarea>
+          <label>Варианты ответов и веса диагноза</label>
+          <div id="qf-options-list"></div>
+          <button type="button" id="qf-add-option" class="btn btn-secondary btn-sm" style="margin-top:8px">+ Добавить вариант</button>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:6px">
+            Веса — числовые модификаторы к диагнозу, суммируются с базовой логикой (например: +2 или -1).
+            Категории: Стресс, Мышцы, Грыжа, Артроз, Стеноз, Воспаление.
+          </div>
         </div>
       </form>
     </div>
