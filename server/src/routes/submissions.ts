@@ -5,6 +5,7 @@ import { prisma } from '../db';
 import { sendLeadToBitrix } from '../bitrix';
 import { sendMailWithPDF } from '../transporter';
 import { generatePDF } from '../generate-pdf';
+import { getOrCreateVersion } from '../questionnaire-version';
 
 export const submissionsRouter = Router();
 
@@ -55,6 +56,14 @@ submissionsRouter.post('/', async (req: Request, res: Response) => {
     return;
   }
 
+  // Snapshot the current questionnaire version (creates one if state changed)
+  let versionId: string | undefined;
+  try {
+    versionId = await getOrCreateVersion();
+  } catch (vErr) {
+    console.error('Failed to get/create questionnaire version:', vErr);
+  }
+
   let submission;
   try {
     submission = await prisma.submission.create({
@@ -67,6 +76,7 @@ submissionsRouter.post('/', async (req: Request, res: Response) => {
         extendedDiagnosis,
         answers: answers ?? [],
         bitrixStatus: 'pending',
+        ...(versionId ? { versionId } : {}),
       },
     });
 
