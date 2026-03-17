@@ -48,6 +48,7 @@ submissionsRouter.post('/', async (req: Request, res: Response) => {
     patientCity,
     diagnosis,
     extendedDiagnosis,
+    diagnosisHtml,
     answers,
   } = req.body;
 
@@ -74,6 +75,7 @@ submissionsRouter.post('/', async (req: Request, res: Response) => {
         patientCity,
         diagnosis,
         extendedDiagnosis,
+        diagnosisHtml,
         answers: answers ?? [],
         bitrixStatus: 'pending',
         ...(versionId ? { versionId } : {}),

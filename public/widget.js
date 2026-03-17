@@ -159,6 +159,7 @@ async function handleSubmit() {
         diagnosis: result.diagnosis,
         answers: result.answers,
         extendedDiagnosis: result.extendedDiagnosis || '',
+        diagnosisHtml: result.html || '',
         privacyPolicyUrl: settings.privacyPolicyUrl || '#',
       });
     }

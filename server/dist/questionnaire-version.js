@@ -12,9 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buildQuestionnaireSnapshot = buildQuestionnaireSnapshot;
-exports.hashSnapshot = hashSnapshot;
-exports.getOrCreateVersion = getOrCreateVersion;
+exports.getOrCreateVersion = exports.hashSnapshot = exports.buildQuestionnaireSnapshot = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const db_1 = require("./db");
 /**
@@ -46,10 +44,12 @@ function buildQuestionnaireSnapshot() {
         }));
     });
 }
+exports.buildQuestionnaireSnapshot = buildQuestionnaireSnapshot;
 function hashSnapshot(snapshot) {
     const str = JSON.stringify(snapshot);
     return crypto_1.default.createHash('sha256').update(str).digest('hex');
 }
+exports.hashSnapshot = hashSnapshot;
 /**
  * Finds an existing version with the same hash, or creates a new one.
  * This deduplicates versions so repeated submissions with unchanged questionnaire
@@ -76,4 +76,5 @@ function getOrCreateVersion(description) {
         return created.id;
     });
 }
+exports.getOrCreateVersion = getOrCreateVersion;
 //# sourceMappingURL=questionnaire-version.js.map

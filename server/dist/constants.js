@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QUESTIONS = exports.ARTHROSIS_MUSCLES_TEXT = exports.ARTHROSIS_MUSCLES_HEADER = exports.HERNIA_MUSCLES_TEXT = exports.HERNIA_MUSCLES_HEADER = exports.STENOSIS_HERNIA_TEXT = exports.STENOSIS_HERNIA_HEADER = exports.STENOSIS_ARTHROSIS_TEXT = exports.STENOSIS_ARTHROSIS_HEADER = exports.MUSCLES_TEXT = exports.MUSCLES_HEADER = exports.ARTHROSIS_TEXT = exports.ARTHROSIS_HEADER = exports.HERNIA_TEXT = exports.HERNIA_HEADER = exports.NEUROSIS_TEXT = exports.NEUROSIS_HEADER = exports.INFLAMMATION_TEXT = exports.INFLAMMATION_HEADER = exports.PAIN_TEXT = exports.PAIN_HEADER = exports.RUS_DIAGNOSIS = exports.START_DIAGNOSIS = exports.NO = exports.YES = void 0;
-exports.getDiagnosisHTML = getDiagnosisHTML;
+exports.QUESTIONS = exports.getDiagnosisHTML = exports.ARTHROSIS_MUSCLES_TEXT = exports.ARTHROSIS_MUSCLES_HEADER = exports.HERNIA_MUSCLES_TEXT = exports.HERNIA_MUSCLES_HEADER = exports.STENOSIS_HERNIA_TEXT = exports.STENOSIS_HERNIA_HEADER = exports.STENOSIS_ARTHROSIS_TEXT = exports.STENOSIS_ARTHROSIS_HEADER = exports.MUSCLES_TEXT = exports.MUSCLES_HEADER = exports.ARTHROSIS_TEXT = exports.ARTHROSIS_HEADER = exports.HERNIA_TEXT = exports.HERNIA_HEADER = exports.NEUROSIS_TEXT = exports.NEUROSIS_HEADER = exports.INFLAMMATION_TEXT = exports.INFLAMMATION_HEADER = exports.PAIN_TEXT = exports.PAIN_HEADER = exports.RUS_DIAGNOSIS = exports.START_DIAGNOSIS = exports.NO = exports.YES = void 0;
 exports.YES = "Да";
 exports.NO = "Нет";
 exports.START_DIAGNOSIS = {
@@ -225,6 +224,7 @@ function getDiagnosisHTML(diagnosisKey) {
         return `${exports.ARTHROSIS_MUSCLES_HEADER} ${exports.ARTHROSIS_MUSCLES_TEXT}`;
     return '';
 }
+exports.getDiagnosisHTML = getDiagnosisHTML;
 exports.QUESTIONS = [
     {
         id: "age",

@@ -1,5 +1,5 @@
 // Render consultation form and file upload section
-export function renderConsultationForm({ sessionId, diagnosis, answers, extendedDiagnosis, privacyPolicyUrl }) {
+export function renderConsultationForm({ sessionId, diagnosis, answers, extendedDiagnosis, diagnosisHtml, privacyPolicyUrl }) {
   const section = document.createElement('div');
   section.className = 'consultation-section';
   section.id = 'consultationSection';
@@ -35,11 +35,11 @@ export function renderConsultationForm({ sessionId, diagnosis, answers, extended
   const form = document.getElementById('consultationForm');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    handleConsultSubmit({ sessionId, diagnosis, answers, extendedDiagnosis });
+    handleConsultSubmit({ sessionId, diagnosis, answers, extendedDiagnosis, diagnosisHtml });
   });
 }
 
-async function handleConsultSubmit({ sessionId, diagnosis, answers, extendedDiagnosis }) {
+async function handleConsultSubmit({ sessionId, diagnosis, answers, extendedDiagnosis, diagnosisHtml }) {
   const form = document.getElementById('consultationForm');
   const btn = form.querySelector('button[type="submit"]');
   const errEl = document.getElementById('consultError');
@@ -68,6 +68,7 @@ async function handleConsultSubmit({ sessionId, diagnosis, answers, extendedDiag
         patientCity,
         diagnosis,
         extendedDiagnosis,
+        diagnosisHtml,
         answers,
       }),
     });

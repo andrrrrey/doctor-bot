@@ -911,6 +911,11 @@ async function viewSubmission(id) {
           <label>Детальный диагноз (баллы по категориям)</label>
           <div class="extended-diagnosis">${renderExtendedDiagnosis(s.extendedDiagnosis)}</div>
         </div>` : ''}
+        ${s.diagnosisHtml ? `
+        <div class="detail-field" style="grid-column:1/-1">
+          <label>Текст диагноза (как видит пользователь)</label>
+          <div class="diagnosis-html-content">${s.diagnosisHtml}</div>
+        </div>` : ''}
       </div>
 
       ${answers.length ? `

@@ -70,6 +70,7 @@ model Submission {
   patientCity       String?
   diagnosis         String?
   extendedDiagnosis String?
+  diagnosisHtml     String?
   answers           Json
   fileUrl           String?
   fileName          String?

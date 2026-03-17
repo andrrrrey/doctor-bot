@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generatePDF = generatePDF;
+exports.generatePDF = void 0;
 const pdfkit_1 = __importDefault(require("pdfkit"));
 const path_1 = __importDefault(require("path"));
 function generatePDF(questionsAndAnswers) {
@@ -37,4 +37,5 @@ function generatePDF(questionsAndAnswers) {
         pdfDoc.end();
     });
 }
+exports.generatePDF = generatePDF;
 //# sourceMappingURL=generate-pdf.js.map
