@@ -865,6 +865,47 @@ tr.drag-over td { background: var(--primary-light); }
   flex-shrink: 0;
 }
 
+/* ═══ DIAGNOSIS HTML CONTENT ════════════════════════════════════ */
+.diagnosis-html-content {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  line-height: 1.7;
+  font-size: 14px;
+  color: var(--gray-800);
+}
+
+.diagnosis-html-content h2,
+.diagnosis-html-content h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
+.diagnosis-html-content h2:first-child,
+.diagnosis-html-content h3:first-child {
+  margin-top: 0;
+}
+
+.diagnosis-html-content p {
+  margin-bottom: 10px;
+  color: var(--gray-700);
+}
+
+.diagnosis-html-content ul,
+.diagnosis-html-content ol {
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+
+.diagnosis-html-content li {
+  margin-bottom: 4px;
+  color: var(--gray-700);
+}
+
 /* ═══ RESPONSIVE ════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   :root { --sidebar-width: 0px; }

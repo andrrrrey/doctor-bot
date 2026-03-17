@@ -53,7 +53,7 @@ const upload = (0, multer_1.default)({
 // ── POST /api/submissions ──────────────────────────────────────────────────
 // Save submission after contact form is filled
 exports.submissionsRouter.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { sessionId, patientName, patientPhone, patientCity, diagnosis, extendedDiagnosis, answers, } = req.body;
+    const { sessionId, patientName, patientPhone, patientCity, diagnosis, extendedDiagnosis, diagnosisHtml, answers, } = req.body;
     if (!sessionId) {
         res.status(400).json({ error: 'sessionId is required' });
         return;
@@ -74,7 +74,8 @@ exports.submissionsRouter.post('/', (req, res) => __awaiter(void 0, void 0, void
                 patientPhone,
                 patientCity,
                 diagnosis,
-                extendedDiagnosis, answers: answers !== null && answers !== void 0 ? answers : [], bitrixStatus: 'pending' }, (versionId ? { versionId } : {})),
+                extendedDiagnosis,
+                diagnosisHtml, answers: answers !== null && answers !== void 0 ? answers : [], bitrixStatus: 'pending' }, (versionId ? { versionId } : {})),
         });
         // Mark session as completed
         yield db_1.prisma.session.update({
