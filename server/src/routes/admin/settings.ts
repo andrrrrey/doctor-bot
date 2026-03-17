@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../../db';
-import { adminAuth } from '../../middleware/adminAuth';
+import { adminAuth, requireSuperadmin } from '../../middleware/adminAuth';
 
 export const adminSettingsRouter = Router();
 adminSettingsRouter.use(adminAuth);
@@ -19,7 +19,7 @@ adminSettingsRouter.get('/', async (_req: Request, res: Response) => {
 });
 
 // PUT /api/admin/settings
-adminSettingsRouter.put('/', async (req: Request, res: Response) => {
+adminSettingsRouter.put('/', requireSuperadmin, async (req: Request, res: Response) => {
   const updates: Record<string, string> = req.body;
   if (typeof updates !== 'object' || Array.isArray(updates)) {
     res.status(400).json({ error: 'Body must be a key/value object' });

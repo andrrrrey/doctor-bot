@@ -21,6 +21,7 @@ const db_1 = require("../db");
 const bitrix_1 = require("../bitrix");
 const transporter_1 = require("../transporter");
 const generate_pdf_1 = require("../generate-pdf");
+const questionnaire_version_1 = require("../questionnaire-version");
 exports.submissionsRouter = (0, express_1.Router)();
 // ── File upload configuration ──────────────────────────────────────────────
 const MAX_FILE_MB = Number((_a = process.env.MAX_FILE_SIZE_MB) !== null && _a !== void 0 ? _a : 10);
@@ -57,19 +58,23 @@ exports.submissionsRouter.post('/', (req, res) => __awaiter(void 0, void 0, void
         res.status(400).json({ error: 'sessionId is required' });
         return;
     }
+    // Snapshot the current questionnaire version (creates one if state changed)
+    let versionId;
+    try {
+        versionId = yield (0, questionnaire_version_1.getOrCreateVersion)();
+    }
+    catch (vErr) {
+        console.error('Failed to get/create questionnaire version:', vErr);
+    }
     let submission;
     try {
         submission = yield db_1.prisma.submission.create({
-            data: {
-                sessionId,
+            data: Object.assign({ sessionId,
                 patientName,
                 patientPhone,
                 patientCity,
                 diagnosis,
-                extendedDiagnosis,
-                answers: answers !== null && answers !== void 0 ? answers : [],
-                bitrixStatus: 'pending',
-            },
+                extendedDiagnosis, answers: answers !== null && answers !== void 0 ? answers : [], bitrixStatus: 'pending' }, (versionId ? { versionId } : {})),
         });
         // Mark session as completed
         yield db_1.prisma.session.update({

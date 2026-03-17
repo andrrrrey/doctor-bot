@@ -1,6 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRusQuestionsAndAnswers = exports.processResultDiagnosis = exports.getPainScale = exports.secondProcessAnswers = exports.processAnswers = void 0;
+exports.processAnswers = processAnswers;
+exports.secondProcessAnswers = secondProcessAnswers;
+exports.getPainScale = getPainScale;
+exports.processResultDiagnosis = processResultDiagnosis;
+exports.getRusQuestionsAndAnswers = getRusQuestionsAndAnswers;
 const constants_1 = require("./constants");
 function processAnswers(startDiagnosis, answers, optionWeights) {
     const diagnosis = Object.assign({}, startDiagnosis);
@@ -101,7 +105,6 @@ function processAnswers(startDiagnosis, answers, optionWeights) {
     }
     return diagnosis;
 }
-exports.processAnswers = processAnswers;
 function secondProcessAnswers(firstDiagnosis, answers, optionWeights) {
     if (firstDiagnosis.neurosis === 0) {
         const updatedAnswers = answers.map(answer => {
@@ -134,7 +137,6 @@ function secondProcessAnswers(firstDiagnosis, answers, optionWeights) {
         return processAnswers(startDiagnosis, updatedAnswers, optionWeights);
     }
 }
-exports.secondProcessAnswers = secondProcessAnswers;
 function processAge(diagnosis, answer, allAnswers) {
     let age = answer;
     const sportAnswer = allAnswers.find(answer => answer.questionId === "sport");
@@ -471,7 +473,6 @@ function getPainScale(answers) {
     const painAnswer = answers.find(({ questionId }) => questionId === "pain_scale");
     return Number((painAnswer === null || painAnswer === void 0 ? void 0 : painAnswer.questionAnswers[0]) || 0);
 }
-exports.getPainScale = getPainScale;
 function processResultDiagnosis(diagnosis) {
     const diagnosisArray = ['muscles', 'hernia', 'arthrosis', 'stenosis'];
     const sortedDiagnosisArray = diagnosisArray.sort((a, b) => diagnosis[b] - diagnosis[a]);
@@ -505,14 +506,12 @@ function processResultDiagnosis(diagnosis) {
         return [resultDiagnosisArray[0]];
     return resultDiagnosisArray;
 }
-exports.processResultDiagnosis = processResultDiagnosis;
 function getRusQuestionsAndAnswers(answers) {
     return answers.map(answer => ({
         question: getRusQuestionById(answer.questionId),
         answers: answer.questionAnswers,
     }));
 }
-exports.getRusQuestionsAndAnswers = getRusQuestionsAndAnswers;
 function getRusQuestionById(questionId) {
     var _a, _b, _c;
     let dirtyQuestion = (_a = constants_1.QUESTIONS.find(question => question.id === questionId)) === null || _a === void 0 ? void 0 : _a.question;

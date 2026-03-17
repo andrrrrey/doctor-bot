@@ -37,6 +37,7 @@ import { adminSubmissionsRouter } from './routes/admin/submissions';
 import { adminStatsRouter } from './routes/admin/stats';
 import { adminSettingsRouter } from './routes/admin/settings';
 import { adminVersionsRouter } from './routes/admin/versions';
+import { adminUsersRouter } from './routes/admin/users';
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
@@ -80,6 +81,7 @@ app.use('/api/settings', settingsRouter);
 
 // ── Admin API routes ─────────────────────────────────────────────────────────
 app.use('/api/admin/auth', adminAuthRouter);
+app.use('/api/admin/users', adminUsersRouter);
 app.use('/api/admin/questions', adminQuestionsRouter);
 app.use('/api/admin/submissions', adminSubmissionsRouter);
 app.use('/api/admin/stats', adminStatsRouter);

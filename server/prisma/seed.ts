@@ -312,7 +312,7 @@ async function main() {
   await (prisma as unknown as { admin: { upsert: (args: unknown) => Promise<unknown> } }).admin.upsert({
     where: { login: 'admin' },
     update: {},
-    create: { login: 'admin', passwordHash },
+    create: { login: 'admin', passwordHash, role: 'superadmin' },
   });
 
   console.log('Done!');

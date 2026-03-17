@@ -32,8 +32,8 @@ exports.adminAuthRouter.post('/login', (req, res) => __awaiter(void 0, void 0, v
             res.status(401).json({ error: 'Invalid credentials' });
             return;
         }
-        const token = (0, adminAuth_1.signAdminToken)(admin.id);
-        res.json({ token });
+        const token = (0, adminAuth_1.signAdminToken)(admin.id, admin.role);
+        res.json({ token, role: admin.role });
     }
     catch (err) {
         console.error('POST /api/admin/auth/login error:', err);
@@ -42,7 +42,7 @@ exports.adminAuthRouter.post('/login', (req, res) => __awaiter(void 0, void 0, v
 }));
 // GET /api/admin/auth/me — check token validity
 exports.adminAuthRouter.get('/me', adminAuth_1.adminAuth, (req, res) => {
-    res.json({ adminId: req.adminId, ok: true });
+    res.json({ adminId: req.adminId, role: req.adminRole, ok: true });
 });
 // POST /api/admin/auth/change-password
 exports.adminAuthRouter.post('/change-password', adminAuth_1.adminAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
