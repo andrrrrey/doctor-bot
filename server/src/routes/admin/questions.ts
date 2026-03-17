@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../../db';
-import { adminAuth } from '../../middleware/adminAuth';
+import { adminAuth, requireSuperadmin } from '../../middleware/adminAuth';
 
 export const adminQuestionsRouter = Router();
 adminQuestionsRouter.use(adminAuth);
+// Write operations are superadmin-only; GET is accessible by all admin roles
 
 // GET /api/admin/questions — all questions (including inactive), with options
 adminQuestionsRouter.get('/', async (_req: Request, res: Response) => {
@@ -38,7 +39,7 @@ adminQuestionsRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/admin/questions — create question
-adminQuestionsRouter.post('/', async (req: Request, res: Response) => {
+adminQuestionsRouter.post('/', requireSuperadmin, async (req: Request, res: Response) => {
   const { id, question, type, order, isActive, parentId, conditions, options } = req.body;
 
   if (!id || !question || !type) {
@@ -82,7 +83,7 @@ adminQuestionsRouter.post('/', async (req: Request, res: Response) => {
 });
 
 // PUT /api/admin/questions/:id — full update
-adminQuestionsRouter.put('/:id', async (req: Request, res: Response) => {
+adminQuestionsRouter.put('/:id', requireSuperadmin, async (req: Request, res: Response) => {
   const { question, type, order, isActive, parentId, conditions } = req.body;
 
   const validTypes = ['number', 'radio', 'checkbox', 'text', 'file'];
@@ -112,7 +113,7 @@ adminQuestionsRouter.put('/:id', async (req: Request, res: Response) => {
 });
 
 // PATCH /api/admin/questions/:id/toggle — toggle isActive
-adminQuestionsRouter.patch('/:id/toggle', async (req: Request, res: Response) => {
+adminQuestionsRouter.patch('/:id/toggle', requireSuperadmin, async (req: Request, res: Response) => {
   try {
     const current = await prisma.question.findUnique({ where: { id: req.params.id } });
     if (!current) {
@@ -131,7 +132,7 @@ adminQuestionsRouter.patch('/:id/toggle', async (req: Request, res: Response) =>
 });
 
 // PATCH /api/admin/questions/reorder — update order for multiple questions
-adminQuestionsRouter.patch('/reorder', async (req: Request, res: Response) => {
+adminQuestionsRouter.patch('/reorder', requireSuperadmin, async (req: Request, res: Response) => {
   const { items } = req.body as { items: { id: string; order: number }[] };
 
   if (!Array.isArray(items)) {
@@ -153,7 +154,7 @@ adminQuestionsRouter.patch('/reorder', async (req: Request, res: Response) => {
 });
 
 // DELETE /api/admin/questions/:id
-adminQuestionsRouter.delete('/:id', async (req: Request, res: Response) => {
+adminQuestionsRouter.delete('/:id', requireSuperadmin, async (req: Request, res: Response) => {
   try {
     await prisma.question.delete({ where: { id: req.params.id } });
     res.json({ ok: true });
@@ -174,7 +175,7 @@ function parseOption(opt: OptionInput): { value: string; weights: Record<string,
 
 // PUT /api/admin/questions/:id/options — replace all options for a question
 // Accepts options as string[] or {value, weights?}[]
-adminQuestionsRouter.put('/:id/options', async (req: Request, res: Response) => {
+adminQuestionsRouter.put('/:id/options', requireSuperadmin, async (req: Request, res: Response) => {
   const { options } = req.body as { options: OptionInput[] };
 
   if (!Array.isArray(options)) {

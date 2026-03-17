@@ -7,6 +7,7 @@
 
 // ── State ────────────────────────────────────────────────────────
 let token = localStorage.getItem('admin_token') || null;
+let adminRole = localStorage.getItem('admin_role') || null;
 let allQuestions = [];
 let submissionsPage = 1;
 let submissionsFilters = {};
@@ -61,16 +62,21 @@ document.addEventListener('DOMContentLoaded', () => {
   setupStatsFilters();
   setupSettings();
   setupVersions();
+  setupUsers();
 });
 
 // ── Auth ─────────────────────────────────────────────────────────
 async function validateToken() {
   try {
-    await get('/auth/me');
+    const data = await get('/auth/me');
+    adminRole = data.role || 'superadmin';
+    localStorage.setItem('admin_role', adminRole);
     showApp();
   } catch {
     token = null;
+    adminRole = null;
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_role');
     showLogin();
   }
 }
@@ -83,7 +89,24 @@ function showLogin() {
 function showApp() {
   document.getElementById('login-page').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
-  navigateTo(location.hash.replace('#', '') || 'questions');
+  applyRoleBasedUI();
+  const defaultSection = adminRole === 'doctor' ? 'submissions' : 'questions';
+  navigateTo(location.hash.replace('#', '') || defaultSection);
+}
+
+function applyRoleBasedUI() {
+  const isSuperadmin = adminRole === 'superadmin';
+
+  // Show/hide superadmin-only nav items
+  document.querySelectorAll('.nav-superadmin').forEach((el) => {
+    el.classList.toggle('hidden', !isSuperadmin);
+  });
+
+  // Show role badge in sidebar
+  const userInfo = document.getElementById('sidebar-user-info');
+  if (userInfo) {
+    userInfo.innerHTML = `<span class="role-badge role-${adminRole}">${adminRole === 'superadmin' ? 'Администратор' : 'Врач'}</span>`;
+  }
 }
 
 function setupLoginForm() {
@@ -102,7 +125,9 @@ function setupLoginForm() {
     try {
       const data = await post('/auth/login', { login, password });
       token = data.token;
+      adminRole = data.role || 'superadmin';
       localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_role', adminRole);
       showApp();
     } catch (err) {
       errEl.textContent = err.message === 'Invalid credentials'
@@ -119,7 +144,9 @@ function setupLoginForm() {
 function setupLogout() {
   document.getElementById('logout-btn').addEventListener('click', () => {
     token = null;
+    adminRole = null;
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_role');
     showLogin();
   });
 }
@@ -139,8 +166,17 @@ function setupNavigation() {
 }
 
 function navigateTo(section) {
-  const valid = ['questions', 'submissions', 'stats', 'versions', 'settings'];
-  if (!valid.includes(section)) section = 'questions';
+  const allSections = ['questions', 'submissions', 'stats', 'versions', 'settings', 'users'];
+  const superadminSections = ['questions', 'versions', 'settings', 'users'];
+
+  // Redirect doctor away from superadmin sections
+  if (adminRole === 'doctor' && superadminSections.includes(section)) {
+    section = 'submissions';
+  }
+
+  if (!allSections.includes(section)) {
+    section = adminRole === 'doctor' ? 'submissions' : 'questions';
+  }
 
   history.replaceState(null, '', `#${section}`);
 
@@ -157,6 +193,7 @@ function navigateTo(section) {
   else if (section === 'stats') loadStats();
   else if (section === 'versions') loadVersions();
   else if (section === 'settings') loadSettings();
+  else if (section === 'users') loadUsers();
 }
 
 // ── Modal helpers ────────────────────────────────────────────────
@@ -869,6 +906,11 @@ async function viewSubmission(id) {
           <p><a href="${esc(s.fileUrl)}" target="_blank" style="color:var(--primary)">${esc(s.fileName || s.fileUrl)}</a></p>
         </div>` : ''}
         <div class="detail-field" style="grid-column:1/-1"><label>Диагноз</label><p>${esc(s.diagnosis || '—')}</p></div>
+        ${s.extendedDiagnosis ? `
+        <div class="detail-field" style="grid-column:1/-1">
+          <label>Детальный диагноз (баллы по категориям)</label>
+          <div class="extended-diagnosis">${renderExtendedDiagnosis(s.extendedDiagnosis)}</div>
+        </div>` : ''}
       </div>
 
       ${answers.length ? `
@@ -1220,7 +1262,153 @@ function renderVersionDetail(v) {
   `;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// USERS SECTION
+// ═══════════════════════════════════════════════════════════════════
+
+function setupUsers() {
+  document.getElementById('add-user-btn').addEventListener('click', () => openUserModal(null));
+  document.getElementById('save-user-btn').addEventListener('click', saveUser);
+}
+
+async function loadUsers() {
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Загрузка...</td></tr>';
+
+  try {
+    const data = await get('/users');
+    renderUsers(data.users);
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell" style="color:var(--danger)">Ошибка: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('users-tbody');
+
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Пользователей нет</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = users.map((u) => {
+    const dt = new Date(u.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const roleBadge = u.role === 'superadmin'
+      ? '<span class="badge badge-role-superadmin">Администратор</span>'
+      : '<span class="badge badge-role-doctor">Врач</span>';
+    return `<tr>
+      <td>${u.id}</td>
+      <td><strong>${esc(u.login)}</strong></td>
+      <td>${roleBadge}</td>
+      <td>${dt}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openUserModal(${JSON.stringify(u)})">Изменить</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id}, '${esc(u.login)}')">Удалить</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openUserModal(user) {
+  const isNew = !user;
+  document.getElementById('user-modal-title').textContent = isNew ? 'Новый пользователь' : 'Изменить пользователя';
+  document.getElementById('uf-id').value = isNew ? '' : user.id;
+  document.getElementById('uf-login').value = isNew ? '' : user.login;
+  document.getElementById('uf-password').value = '';
+  document.getElementById('uf-role').value = isNew ? 'doctor' : user.role;
+  document.getElementById('uf-password-hint').textContent = isNew
+    ? '(не менее 6 символов)'
+    : '(оставьте пустым, чтобы не менять)';
+  document.getElementById('uf-password').required = isNew;
+  openModal('user-modal');
+}
+
+async function saveUser() {
+  const id = document.getElementById('uf-id').value;
+  const login = document.getElementById('uf-login').value.trim();
+  const password = document.getElementById('uf-password').value;
+  const role = document.getElementById('uf-role').value;
+
+  if (!login) { toast('Введите логин', 'error'); return; }
+
+  const isNew = !id;
+  if (isNew && !password) { toast('Введите пароль', 'error'); return; }
+  if (password && password.length < 6) { toast('Пароль должен быть не менее 6 символов', 'error'); return; }
+
+  const btn = document.getElementById('save-user-btn');
+  btn.disabled = true;
+  try {
+    const body = { login, role };
+    if (password) body.password = password;
+
+    if (isNew) {
+      await post('/users', body);
+      toast('Пользователь создан');
+    } else {
+      await put(`/users/${id}`, body);
+      toast('Пользователь обновлён');
+    }
+    closeModal('user-modal');
+    loadUsers();
+  } catch (err) {
+    toast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deleteUser(id, login) {
+  if (!confirm(`Удалить пользователя «${login}»?`)) return;
+  try {
+    await del(`/users/${id}`);
+    toast('Пользователь удалён');
+    loadUsers();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
 // ── Helpers ──────────────────────────────────────────────────────
+
+function renderExtendedDiagnosis(text) {
+  if (!text) return '';
+  // Parse lines like "Нервоз: 5", render as score bars
+  const categoryLabels = {
+    'Нервоз': 'Стресс / Нервоз',
+    'Мышцы': 'Мышцы',
+    'Грыжа': 'Грыжа',
+    'Артроз': 'Артроз',
+    'Стеноз': 'Стеноз',
+    'Воспаление': 'Воспаление',
+  };
+
+  const lines = text.trim().split('\n').map((l) => l.trim()).filter(Boolean);
+  const items = lines.map((line) => {
+    const m = line.match(/^(.+?):\s*(-?\d+)/);
+    if (!m) return null;
+    const key = m[1].trim();
+    const val = parseInt(m[2], 10);
+    return { label: categoryLabels[key] || key, val };
+  }).filter(Boolean);
+
+  if (!items.length) return `<pre style="font-size:12px;color:var(--gray-600);white-space:pre-wrap">${esc(text)}</pre>`;
+
+  const maxVal = Math.max(...items.map((i) => Math.abs(i.val)), 1);
+
+  return items.map(({ label, val }) => {
+    const pct = Math.min(100, Math.round((Math.max(0, val) / maxVal) * 100));
+    const color = val > 0 ? 'var(--primary)' : 'var(--gray-300)';
+    return `
+      <div class="diag-row">
+        <span class="diag-label">${esc(label)}</span>
+        <div class="diag-bar-wrap">
+          <div class="diag-bar" style="width:${pct}%;background:${color}"></div>
+        </div>
+        <span class="diag-score">${val}</span>
+      </div>`;
+  }).join('');
+}
+
 function esc(str) {
   return String(str ?? '')
     .replace(/&/g, '&amp;')

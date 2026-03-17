@@ -780,6 +780,91 @@ tr.drag-over td { background: var(--primary-light); }
   opacity: 0.9;
 }
 
+/* ═══ SIDEBAR USER INFO ═════════════════════════════════════════ */
+.sidebar-user-info {
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 4px;
+}
+
+.role-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.role-superadmin {
+  background: rgba(59,130,246,0.2);
+  color: #93c5fd;
+}
+
+.role-doctor {
+  background: rgba(34,197,94,0.2);
+  color: #86efac;
+}
+
+/* ═══ ROLE BADGES IN USERS TABLE ════════════════════════════════ */
+.badge-role-superadmin {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-role-doctor {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* ═══ EXTENDED DIAGNOSIS ═══════════════════════════════════════ */
+.extended-diagnosis {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diag-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diag-label {
+  width: 140px;
+  font-size: 12px;
+  color: var(--gray-600);
+  flex-shrink: 0;
+}
+
+.diag-bar-wrap {
+  flex: 1;
+  height: 16px;
+  background: var(--gray-200);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.diag-bar {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+
+.diag-score {
+  width: 30px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+  flex-shrink: 0;
+}
+
 /* ═══ RESPONSIVE ════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   :root { --sidebar-width: 0px; }

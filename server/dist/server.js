@@ -31,6 +31,8 @@ const questions_2 = require("./routes/admin/questions");
 const submissions_2 = require("./routes/admin/submissions");
 const stats_1 = require("./routes/admin/stats");
 const settings_2 = require("./routes/admin/settings");
+const versions_1 = require("./routes/admin/versions");
+const users_1 = require("./routes/admin/users");
 const app = (0, express_1.default)();
 const port = Number((_a = process.env.PORT) !== null && _a !== void 0 ? _a : 3000);
 // ── Static files ────────────────────────────────────────────────────────────
@@ -66,10 +68,12 @@ app.use('/api/submissions', submissions_1.submissionsRouter);
 app.use('/api/settings', settings_1.settingsRouter);
 // ── Admin API routes ─────────────────────────────────────────────────────────
 app.use('/api/admin/auth', auth_1.adminAuthRouter);
+app.use('/api/admin/users', users_1.adminUsersRouter);
 app.use('/api/admin/questions', questions_2.adminQuestionsRouter);
 app.use('/api/admin/submissions', submissions_2.adminSubmissionsRouter);
 app.use('/api/admin/stats', stats_1.adminStatsRouter);
 app.use('/api/admin/settings', settings_2.adminSettingsRouter);
+app.use('/api/admin/versions', versions_1.adminVersionsRouter);
 // ── Legacy routes (kept for backward compatibility with Telegram bot) ────────
 app.get('/survey', (_req, res) => {
     res.json({ questions: constants_1.QUESTIONS });

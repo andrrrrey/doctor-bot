@@ -14,11 +14,17 @@ enum QuestionType {
   file
 }
 
+enum AdminRole {
+  superadmin
+  doctor
+}
+
 model Admin {
-  id           Int      @id @default(autoincrement())
-  login        String   @unique
+  id           Int       @id @default(autoincrement())
+  login        String    @unique
   passwordHash String
-  createdAt    DateTime @default(now())
+  role         AdminRole @default(superadmin)
+  createdAt    DateTime  @default(now())
 }
 
 model Question {

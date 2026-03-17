@@ -29,7 +29,7 @@ exports.adminSettingsRouter.get('/', (_req, res) => __awaiter(void 0, void 0, vo
     }
 }));
 // PUT /api/admin/settings
-exports.adminSettingsRouter.put('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminSettingsRouter.put('/', adminAuth_1.requireSuperadmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const updates = req.body;
     if (typeof updates !== 'object' || Array.isArray(updates)) {
         res.status(400).json({ error: 'Body must be a key/value object' });

@@ -15,6 +15,7 @@ const db_1 = require("../../db");
 const adminAuth_1 = require("../../middleware/adminAuth");
 exports.adminQuestionsRouter = (0, express_1.Router)();
 exports.adminQuestionsRouter.use(adminAuth_1.adminAuth);
+// Write operations are superadmin-only; GET is accessible by all admin roles
 // GET /api/admin/questions — all questions (including inactive), with options
 exports.adminQuestionsRouter.get('/', (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -48,7 +49,7 @@ exports.adminQuestionsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0,
     }
 }));
 // POST /api/admin/questions — create question
-exports.adminQuestionsRouter.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminQuestionsRouter.post('/', adminAuth_1.requireSuperadmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const { id, question, type, order, isActive, parentId, conditions, options } = req.body;
     if (!id || !question || !type) {
@@ -89,7 +90,7 @@ exports.adminQuestionsRouter.post('/', (req, res) => __awaiter(void 0, void 0, v
     }
 }));
 // PUT /api/admin/questions/:id — full update
-exports.adminQuestionsRouter.put('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminQuestionsRouter.put('/:id', adminAuth_1.requireSuperadmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { question, type, order, isActive, parentId, conditions } = req.body;
     const validTypes = ['number', 'radio', 'checkbox', 'text', 'file'];
     if (type && !validTypes.includes(type)) {
@@ -110,7 +111,7 @@ exports.adminQuestionsRouter.put('/:id', (req, res) => __awaiter(void 0, void 0,
     }
 }));
 // PATCH /api/admin/questions/:id/toggle — toggle isActive
-exports.adminQuestionsRouter.patch('/:id/toggle', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminQuestionsRouter.patch('/:id/toggle', adminAuth_1.requireSuperadmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const current = yield db_1.prisma.question.findUnique({ where: { id: req.params.id } });
         if (!current) {
@@ -129,7 +130,7 @@ exports.adminQuestionsRouter.patch('/:id/toggle', (req, res) => __awaiter(void 0
     }
 }));
 // PATCH /api/admin/questions/reorder — update order for multiple questions
-exports.adminQuestionsRouter.patch('/reorder', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminQuestionsRouter.patch('/reorder', adminAuth_1.requireSuperadmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { items } = req.body;
     if (!Array.isArray(items)) {
         res.status(400).json({ error: 'items must be an array of {id, order}' });
@@ -145,7 +146,7 @@ exports.adminQuestionsRouter.patch('/reorder', (req, res) => __awaiter(void 0, v
     }
 }));
 // DELETE /api/admin/questions/:id
-exports.adminQuestionsRouter.delete('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminQuestionsRouter.delete('/:id', adminAuth_1.requireSuperadmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield db_1.prisma.question.delete({ where: { id: req.params.id } });
         res.json({ ok: true });
@@ -163,7 +164,7 @@ function parseOption(opt) {
 }
 // PUT /api/admin/questions/:id/options — replace all options for a question
 // Accepts options as string[] or {value, weights?}[]
-exports.adminQuestionsRouter.put('/:id/options', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.adminQuestionsRouter.put('/:id/options', adminAuth_1.requireSuperadmin, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { options } = req.body;
     if (!Array.isArray(options)) {
         res.status(400).json({ error: 'options must be an array' });

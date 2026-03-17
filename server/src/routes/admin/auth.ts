@@ -5,6 +5,8 @@ import { adminAuth, signAdminToken, AdminRequest } from '../../middleware/adminA
 
 export const adminAuthRouter = Router();
 
+type AdminRecord = { id: number; passwordHash: string; role: string };
+
 // POST /api/admin/auth/login
 adminAuthRouter.post('/login', async (req: Request, res: Response) => {
   const { login, password } = req.body;
@@ -15,7 +17,7 @@ adminAuthRouter.post('/login', async (req: Request, res: Response) => {
   }
 
   try {
-    const admin = await (prisma as unknown as { admin: { findUnique: (args: unknown) => Promise<{ id: number; passwordHash: string } | null> } })
+    const admin = await (prisma as unknown as { admin: { findUnique: (args: unknown) => Promise<AdminRecord | null> } })
       .admin.findUnique({ where: { login } });
 
     if (!admin || !bcrypt.compareSync(password, admin.passwordHash)) {
@@ -23,8 +25,8 @@ adminAuthRouter.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
-    const token = signAdminToken(admin.id);
-    res.json({ token });
+    const token = signAdminToken(admin.id, admin.role);
+    res.json({ token, role: admin.role });
   } catch (err) {
     console.error('POST /api/admin/auth/login error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -33,7 +35,7 @@ adminAuthRouter.post('/login', async (req: Request, res: Response) => {
 
 // GET /api/admin/auth/me — check token validity
 adminAuthRouter.get('/me', adminAuth, (req: AdminRequest, res: Response) => {
-  res.json({ adminId: req.adminId, ok: true });
+  res.json({ adminId: req.adminId, role: req.adminRole, ok: true });
 });
 
 // POST /api/admin/auth/change-password
@@ -51,7 +53,7 @@ adminAuthRouter.post('/change-password', adminAuth, async (req: AdminRequest, re
   }
 
   try {
-    const admin = await (prisma as unknown as { admin: { findUnique: (args: unknown) => Promise<{ id: number; passwordHash: string } | null>; update: (args: unknown) => Promise<unknown> } })
+    const admin = await (prisma as unknown as { admin: { findUnique: (args: unknown) => Promise<AdminRecord | null>; update: (args: unknown) => Promise<unknown> } })
       .admin.findUnique({ where: { id: req.adminId } });
 
     if (!admin || !bcrypt.compareSync(currentPassword, admin.passwordHash)) {

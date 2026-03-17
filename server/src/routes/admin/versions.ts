@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../../db';
-import { adminAuth } from '../../middleware/adminAuth';
+import { adminAuth, requireSuperadmin } from '../../middleware/adminAuth';
 import { getOrCreateVersion, buildQuestionnaireSnapshot } from '../../questionnaire-version';
 
 export const adminVersionsRouter = Router();
 adminVersionsRouter.use(adminAuth);
+adminVersionsRouter.use(requireSuperadmin);
 
 // GET /api/admin/versions — list all versions with submission counts
 adminVersionsRouter.get('/', async (_req: Request, res: Response) => {
