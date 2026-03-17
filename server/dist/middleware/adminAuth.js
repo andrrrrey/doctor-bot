@@ -4,9 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.adminAuth = adminAuth;
-exports.requireSuperadmin = requireSuperadmin;
-exports.signAdminToken = signAdminToken;
+exports.signAdminToken = exports.requireSuperadmin = exports.adminAuth = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const JWT_SECRET = (_a = process.env.JWT_SECRET) !== null && _a !== void 0 ? _a : 'doctor-bot-admin-secret-change-in-production';
 function adminAuth(req, res, next) {
@@ -27,6 +25,7 @@ function adminAuth(req, res, next) {
         res.status(401).json({ error: 'Invalid or expired token' });
     }
 }
+exports.adminAuth = adminAuth;
 function requireSuperadmin(req, res, next) {
     if (req.adminRole !== 'superadmin') {
         res.status(403).json({ error: 'Access denied: superadmin only' });
@@ -34,7 +33,9 @@ function requireSuperadmin(req, res, next) {
     }
     next();
 }
+exports.requireSuperadmin = requireSuperadmin;
 function signAdminToken(adminId, role) {
     return jsonwebtoken_1.default.sign({ adminId, role }, JWT_SECRET, { expiresIn: '24h' });
 }
+exports.signAdminToken = signAdminToken;
 //# sourceMappingURL=adminAuth.js.map

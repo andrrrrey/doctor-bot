@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendLeadToBitrix = sendLeadToBitrix;
+exports.sendLeadToBitrix = void 0;
 const WEBHOOK_URL = 'https://epifanov.bitrix24.ru/rest/3501/ocir0h8kk3rm57na/crm.lead.add';
 function sendLeadToBitrix(leadData) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -36,4 +36,5 @@ function sendLeadToBitrix(leadData) {
         }
     });
 }
+exports.sendLeadToBitrix = sendLeadToBitrix;
 //# sourceMappingURL=bitrix.js.map
