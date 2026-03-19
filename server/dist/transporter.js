@@ -5,42 +5,54 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendMailWithPDF = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const transporter = nodemailer_1.default.createTransport({
-    host: 'smtp.yurakoch.ru',
-    port: 587,
-    secure: false,
-    auth: {
-        user: 'doctorbot@yurakoch.ru',
-        pass: 'h2bDEd3ucT',
-    },
-    tls: {
-        rejectUnauthorized: false,
-    }
-});
-const mailOptions = {
-    from: 'doctorbot@yurakoch.ru',
-    to: 'web-iris@yandex.ru, info@epifanov.clinic',
-    subject: 'Заявка с опросника',
-    text: 'Текст письма',
+const db_1 = require("./db");
+const BEGET_DEFAULTS = {
+    host: 'mail.beget.com',
+    port: 465,
+    secure: true,
 };
-function sendMailWithPDF(text, pdfBuffer) {
-    const mailOptionsWithPDF = Object.assign(Object.assign({}, mailOptions), { text, attachments: [
+async function getSmtpSettings() {
+    const rows = await db_1.prisma.setting.findMany({
+        where: { key: { in: ['smtpHost', 'smtpPort', 'smtpSecure', 'smtpUser', 'smtpPass', 'emailRecipients'] } }
+    });
+    const s = {};
+    rows.forEach((r) => { s[r.key] = r.value; });
+    return s;
+}
+async function sendMailWithPDF(text, pdfBuffer) {
+    const s = await getSmtpSettings();
+    const host = s.smtpHost || BEGET_DEFAULTS.host;
+    const port = s.smtpPort ? Number(s.smtpPort) : BEGET_DEFAULTS.port;
+    const secure = s.smtpSecure !== undefined ? s.smtpSecure === 'true' : BEGET_DEFAULTS.secure;
+    const user = s.smtpUser || '';
+    const pass = s.smtpPass || '';
+    const recipients = s.emailRecipients || '';
+    if (!user || !pass) {
+        console.warn('SMTP credentials not configured, skipping email');
+        return;
+    }
+    if (!recipients) {
+        console.warn('No email recipients configured, skipping email');
+        return;
+    }
+    const transporter = nodemailer_1.default.createTransport({
+        host,
+        port,
+        secure,
+        auth: { user, pass },
+    });
+    await transporter.sendMail({
+        from: user,
+        to: recipients,
+        subject: 'Заявка с опросника',
+        text,
+        attachments: [
             {
                 filename: 'Результаты_опроса_пациента.pdf',
                 content: pdfBuffer,
-                contentType: 'application/pdf'
-            }
-        ] });
-    return new Promise((resolve, reject) => {
-        transporter.sendMail(mailOptionsWithPDF, (error) => {
-            if (error) {
-                console.error(error);
-                reject(error);
-            }
-            else {
-                resolve();
-            }
-        });
+                contentType: 'application/pdf',
+            },
+        ],
     });
 }
 exports.sendMailWithPDF = sendMailWithPDF;

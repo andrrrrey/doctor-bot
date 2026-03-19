@@ -10,7 +10,11 @@ adminSettingsRouter.get('/', async (_req: Request, res: Response) => {
   try {
     const rows = await prisma.setting.findMany();
     const settings: Record<string, string> = {};
-    rows.forEach((r) => { settings[r.key] = r.value; });
+    rows.forEach((r) => {
+      // Don't expose SMTP password - return a sentinel value so the frontend
+      // knows a password is saved without revealing it
+      settings[r.key] = r.key === 'smtpPass' ? '__saved__' : r.value;
+    });
     res.json(settings);
   } catch (err) {
     console.error('GET /api/admin/settings error:', err);
@@ -28,13 +32,18 @@ adminSettingsRouter.put('/', requireSuperadmin, async (req: Request, res: Respon
 
   try {
     await Promise.all(
-      Object.entries(updates).map(([key, value]) =>
-        prisma.setting.upsert({
-          where: { key },
-          update: { value: String(value) },
-          create: { key, value: String(value) },
-        })
-      )
+      Object.entries(updates)
+        // Skip smtpPass if the frontend sent back the sentinel (unchanged)
+        .filter(([key, value]) => !(key === 'smtpPass' && value === '__saved__'))
+        // Skip empty smtpPass (field left blank = don't change password)
+        .filter(([key, value]) => !(key === 'smtpPass' && value === ''))
+        .map(([key, value]) =>
+          prisma.setting.upsert({
+            where: { key },
+            update: { value: String(value) },
+            create: { key, value: String(value) },
+          })
+        )
     );
     res.json({ ok: true });
   } catch (err) {
