@@ -26,7 +26,18 @@ export async function sendLeadToBitrix(leadData: LeadData) {
         }
       })
     });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Bitrix HTTP ${response.status}: ${text}`);
+    }
+
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(`Bitrix API error: ${data.error}${data.error_description ? ' — ' + data.error_description : ''}`);
+    }
   } catch (error) {
     console.error('Error sending message to Bitrix:', error);
+    throw error;
   }
 }
