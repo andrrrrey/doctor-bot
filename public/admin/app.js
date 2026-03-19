@@ -1040,7 +1040,14 @@ async function loadSettings() {
 
     Object.entries(settings).forEach(([key, value]) => {
       const input = form.querySelector(`[name="${key}"]`);
-      if (input) input.value = value;
+      if (input) {
+        // Don't fill the password field - show placeholder when a password is saved
+        if (key === 'smtpPass') {
+          input.placeholder = value === '__saved__' ? '••••••••  (пароль сохранён, введите новый чтобы изменить)' : 'Введите пароль';
+        } else {
+          input.value = value;
+        }
+      }
 
       // Sync color picker
       const hexInput = form.querySelector(`[name="${key}Hex"]`);
@@ -1060,7 +1067,8 @@ async function saveSettings() {
   const settingsKeys = [
     'primaryColor', 'backgroundColor', 'textColor',
     'borderRadius', 'fontFamily', 'surveyTitle', 'surveyDisclaimer',
-    'privacyPolicyUrl', 'bitrixWebhookUrl', 'bitrixLeadTitle', 'emailRecipients',
+    'privacyPolicyUrl', 'bitrixWebhookUrl', 'bitrixLeadTitle',
+    'smtpHost', 'smtpPort', 'smtpSecure', 'smtpUser', 'emailRecipients',
   ];
 
   const data = {};
@@ -1068,6 +1076,12 @@ async function saveSettings() {
     const el = form.querySelector(`[name="${key}"]`);
     if (el) data[key] = el.value;
   });
+
+  // Only include smtpPass if the user actually typed a new password
+  const smtpPassEl = form.querySelector('[name="smtpPass"]');
+  if (smtpPassEl && smtpPassEl.value.trim() !== '') {
+    data['smtpPass'] = smtpPassEl.value;
+  }
 
   try {
     await put('/settings', data);

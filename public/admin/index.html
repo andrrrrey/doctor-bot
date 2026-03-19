@@ -284,9 +284,32 @@
         <div class="settings-group">
           <h2>Email-уведомления</h2>
           <div class="settings-grid">
+            <div class="form-group">
+              <label>SMTP-сервер</label>
+              <input type="text" name="smtpHost" placeholder="mail.beget.com" />
+            </div>
+            <div class="form-group">
+              <label>Порт</label>
+              <input type="number" name="smtpPort" placeholder="465" />
+            </div>
+            <div class="form-group">
+              <label>Шифрование</label>
+              <select name="smtpSecure">
+                <option value="true">SSL (порт 465)</option>
+                <option value="false">STARTTLS (порт 587)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Email отправителя</label>
+              <input type="email" name="smtpUser" placeholder="bot@ваш-домен.ru" />
+            </div>
+            <div class="form-group">
+              <label>Пароль почтового ящика</label>
+              <input type="password" name="smtpPass" autocomplete="new-password" placeholder="Оставьте пустым, чтобы не менять" />
+            </div>
             <div class="form-group full-width">
               <label>Получатели (через запятую)</label>
-              <input type="text" name="emailRecipients" placeholder="email1@example.com, email2@example.com" />
+              <input type="text" name="emailRecipients" placeholder="admin@ваш-домен.ru, email2@example.com" />
             </div>
           </div>
         </div>
