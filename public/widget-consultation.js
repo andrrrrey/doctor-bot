@@ -101,9 +101,9 @@ function renderFileUpload(submissionId) {
   section.className = 'file-upload-section';
   section.innerHTML = `
     <h3>Прикрепите снимок или документ (необязательно)</h3>
-    <p>Форматы: PDF, JPG, PNG — до 10 МБ</p>
+    <p>Форматы: ZIP, RAR, DICOM (.dcm) — от 20 до 50 МБ</p>
     <div class="file-input-wrap">
-      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" />
+      <input type="file" id="fileInput" accept=".zip,.rar,.dcm" />
       <button class="btn-upload" id="uploadBtn">Загрузить файл</button>
       <div id="uploadStatus" class="upload-status"></div>
     </div>

@@ -1,4 +1,5 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
 import { prisma } from '../db';
@@ -10,9 +11,18 @@ import { getOrCreateVersion } from '../questionnaire-version';
 export const submissionsRouter = Router();
 
 // ── File upload configuration ──────────────────────────────────────────────
-const MAX_FILE_MB = Number(process.env.MAX_FILE_SIZE_MB ?? 10);
-const ALLOWED_MIME = new Set(['application/pdf', 'image/jpeg', 'image/png']);
-const ALLOWED_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png']);
+const MAX_FILE_MB = Number(process.env.MAX_FILE_SIZE_MB ?? 50);
+const MIN_FILE_MB = 20;
+const ALLOWED_MIME = new Set([
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/x-zip',
+  'application/x-rar-compressed',
+  'application/vnd.rar',
+  'application/dicom',
+  'application/octet-stream', // fallback for .dcm and .rar on some systems
+]);
+const ALLOWED_EXT = new Set(['.zip', '.rar', '.dcm']);
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
@@ -31,8 +41,8 @@ const upload = multer({
   limits: { fileSize: MAX_FILE_MB * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (!ALLOWED_MIME.has(file.mimetype) || !ALLOWED_EXT.has(ext)) {
-      return cb(new Error('Invalid file type. Allowed: pdf, jpg, jpeg, png'));
+    if (!ALLOWED_EXT.has(ext)) {
+      return cb(new Error('Invalid file type. Allowed: zip, rar, dcm (DICOM)'));
     }
     cb(null, true);
   },
@@ -137,12 +147,33 @@ submissionsRouter.post('/', async (req: Request, res: Response) => {
 // Upload a file and attach to submission
 submissionsRouter.post(
   '/:id/file',
-  upload.single('file'),
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.single('file')(req, res, (err) => {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        res.status(400).json({ error: `Файл слишком большой. Максимальный размер — ${MAX_FILE_MB} МБ` });
+        return;
+      }
+      if (err) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      next();
+    });
+  },
   async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!req.file) {
       res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Reject files smaller than MIN_FILE_MB — considered erroneous
+    if (req.file.size < MIN_FILE_MB * 1024 * 1024) {
+      fs.unlink(req.file.path, () => {});
+      res.status(400).json({
+        error: `Файл слишком маленький (${(req.file.size / 1024 / 1024).toFixed(1)} МБ). Минимальный размер — ${MIN_FILE_MB} МБ. Возможно, файл повреждён или неполный.`,
+      });
       return;
     }
 

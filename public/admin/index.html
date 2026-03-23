@@ -456,6 +456,24 @@
     <div class="modal-body" id="version-detail"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" data-close="version-modal">Закрыть</button>
+      <button class="btn btn-danger" id="restore-version-btn">Восстановить эту версию</button>
+    </div>
+  </div>
+</div>
+
+<!-- Restore version confirmation modal -->
+<div id="restore-version-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Восстановить версию опросника</h3>
+      <button class="modal-close" data-close="restore-version-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <p id="restore-version-confirm-text">Вы уверены? Текущий опросник будет заменён вопросами из выбранной версии. Это действие необратимо.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" data-close="restore-version-modal">Отмена</button>
+      <button class="btn btn-danger" id="confirm-restore-version-btn">Восстановить</button>
     </div>
   </div>
 </div>
