@@ -81,3 +81,61 @@ adminVersionsRouter.post('/', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to save version' });
   }
 });
+
+// POST /api/admin/versions/:id/restore — restore questionnaire to a saved version
+adminVersionsRouter.post('/:id/restore', async (req: Request, res: Response) => {
+  try {
+    const v = await prisma.questionnaireVersion.findUnique({ where: { id: req.params.id } });
+    if (!v) {
+      res.status(404).json({ error: 'Version not found' });
+      return;
+    }
+
+    const snapshot = Array.isArray(v.snapshot) ? (v.snapshot as {
+      id: string;
+      question: string;
+      type: string;
+      order: number;
+      isActive: boolean;
+      parentId: string | null;
+      conditions: string[];
+      options: { value: string; order: number; weights: Record<string, number> }[];
+    }[]) : [];
+
+    // Replace all questions atomically
+    await prisma.$transaction(async (tx) => {
+      // Delete all existing questions (options cascade automatically)
+      await tx.question.deleteMany({});
+
+      // Recreate from snapshot in order (parents before children)
+      const roots = snapshot.filter((q) => !q.parentId);
+      const children = snapshot.filter((q) => q.parentId);
+
+      for (const q of [...roots, ...children]) {
+        await tx.question.create({
+          data: {
+            id: q.id,
+            question: q.question,
+            type: q.type as 'radio' | 'checkbox' | 'number' | 'text' | 'file',
+            order: q.order,
+            isActive: q.isActive,
+            parentId: q.parentId,
+            conditions: q.conditions,
+            options: {
+              create: q.options.map((o) => ({
+                value: o.value,
+                order: o.order,
+                weights: o.weights,
+              })),
+            },
+          },
+        });
+      }
+    });
+
+    res.json({ ok: true, restoredVersion: v.version });
+  } catch (err) {
+    console.error('POST /api/admin/versions/:id/restore error:', err);
+    res.status(500).json({ error: 'Failed to restore version' });
+  }
+});

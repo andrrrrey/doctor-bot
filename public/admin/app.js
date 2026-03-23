@@ -1178,6 +1178,31 @@ function setupVersions() {
       btn.disabled = false;
     }
   });
+
+  document.getElementById('restore-version-btn').addEventListener('click', () => {
+    if (!_currentViewVersionId) return;
+    document.getElementById('restore-version-confirm-text').textContent =
+      `Вы уверены? Текущий опросник будет заменён вопросами из версии v${_currentViewVersionNumber}. Это действие необратимо.`;
+    openModal('restore-version-modal');
+  });
+
+  document.getElementById('confirm-restore-version-btn').addEventListener('click', async () => {
+    if (!_currentViewVersionId) return;
+    const btn = document.getElementById('confirm-restore-version-btn');
+    btn.disabled = true;
+    try {
+      await post(`/versions/${_currentViewVersionId}/restore`, {});
+      closeModal('restore-version-modal');
+      closeModal('version-modal');
+      toast(`Опросник восстановлен до версии v${_currentViewVersionNumber}`);
+      loadQuestions();
+      loadVersions();
+    } catch (err) {
+      toast('Ошибка восстановления: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
 }
 
 async function loadVersions() {
@@ -1213,7 +1238,12 @@ function renderVersions(versions) {
   `).join('');
 }
 
+let _currentViewVersionId = null;
+let _currentViewVersionNumber = null;
+
 async function viewVersion(id, versionNumber) {
+  _currentViewVersionId = id;
+  _currentViewVersionNumber = versionNumber;
   document.getElementById('version-modal-title').textContent = `Версия опросника v${versionNumber}`;
   document.getElementById('version-detail').innerHTML = '<div class="loading-cell">Загрузка...</div>';
   openModal('version-modal');
