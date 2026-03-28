@@ -178,6 +178,7 @@ function displayResults(result) {
   section.innerHTML = result.html;
   document.querySelector('main').appendChild(section);
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.parent.postMessage({ type: 'doctor-bot-scroll-to-top' }, '*');
 }
 
 function hideSurveyForm() {
