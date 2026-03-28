@@ -165,6 +165,13 @@ async function handleSubmit() {
     }
 
     notifyHeight();
+
+    // Notify parent to scroll popup to top after all DOM changes settle
+    [0, 200, 500, 1000].forEach(function(delay) {
+      setTimeout(function() {
+        window.parent.postMessage({ type: 'doctor-bot-scroll-to-top' }, '*');
+      }, delay);
+    });
   } catch {
     btn.disabled = false;
     btn.textContent = 'Получить результат';
@@ -177,7 +184,7 @@ function displayResults(result) {
   section.className = 'results-section';
   section.innerHTML = result.html;
   document.querySelector('main').appendChild(section);
-  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.scrollTo(0, 0);
 }
 
 function hideSurveyForm() {
