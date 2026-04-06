@@ -1,0 +1,627 @@
+/* ── CSS Custom Properties (theme variables) ─────────────────────────────── */
+:root {
+  --w-primary:        #1a56db;
+  --w-primary-hover:  #1447c0;
+  --w-primary-light:  #dbeafe;
+  --w-bg:             #ffffff;
+  --w-surface:        #f9fafb;
+  --w-border:         #e5e7eb;
+  --w-text:           #111827;
+  --w-text-muted:     #6b7280;
+  --w-radius:         8px;
+  --w-font:           system-ui, -apple-system, sans-serif;
+  --w-error:          #dc2626;
+  --w-success:        #16a34a;
+}
+
+/* ── Theme: dark ─────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --w-primary:        #3b82f6;
+  --w-primary-hover:  #60a5fa;
+  --w-primary-light:  #1e3a5f;
+  --w-bg:             #111827;
+  --w-surface:        #1f2937;
+  --w-border:         #374151;
+  --w-text:           #f9fafb;
+  --w-text-muted:     #9ca3af;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--w-font);
+  background: var(--w-bg);
+  color: var(--w-text);
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── App container ───────────────────────────────────────────────────────── */
+#app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+.progress-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--w-bg);
+  padding: 1rem 0 0.75rem;
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--w-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--w-primary);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+
+.progress-text {
+  font-size: 0.8rem;
+  color: var(--w-text-muted);
+  margin-top: 0.4rem;
+  text-align: right;
+}
+
+/* ── Step container ──────────────────────────────────────────────────────── */
+.step-viewport {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.step-screen {
+  width: 100%;
+  padding: 1.5rem 0 2rem;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes slideInRight {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slideOutLeft {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-40px); opacity: 0; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-40px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(40px); opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-enter       { animation: slideInRight  300ms ease forwards; }
+.step-exit        { animation: slideOutLeft  300ms ease forwards; position: absolute; top: 0; left: 0; right: 0; }
+.step-enter-back  { animation: slideInLeft   300ms ease forwards; }
+.step-exit-back   { animation: slideOutRight 300ms ease forwards; position: absolute; top: 0; left: 0; right: 0; }
+.step-fade-in     { animation: fadeIn        400ms ease forwards; }
+
+/* ── Welcome screen ──────────────────────────────────────────────────────── */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 60vh;
+  padding: 2rem 1rem;
+}
+
+.welcome-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--w-primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-screen h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+}
+
+.welcome-screen p {
+  color: var(--w-text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  max-width: 440px;
+}
+
+.welcome-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--w-text-muted);
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 0.4rem 0.9rem;
+  background: var(--w-surface);
+  border-radius: 20px;
+}
+
+.welcome-time::before {
+  content: "\231A"; /* watch emoji */
+}
+
+/* ── Primary button ──────────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 2.5rem;
+  background: var(--w-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--w-radius);
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+  max-width: 320px;
+}
+
+.btn-primary:hover { background: var(--w-primary-hover); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Question screen ─────────────────────────────────────────────────────── */
+.question-screen {
+  padding: 1rem 0 2rem;
+}
+
+.question-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
+}
+
+/* ── Answer cards (radio / checkbox) ─────────────────────────────────────── */
+.answer-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.answer-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  background: var(--w-surface);
+  border: 2px solid var(--w-border);
+  border-radius: var(--w-radius);
+  font-size: 0.95rem;
+  color: var(--w-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  line-height: 1.4;
+  min-height: 48px;
+}
+
+.answer-card:hover {
+  border-color: var(--w-primary);
+}
+
+.answer-card:active {
+  transform: scale(0.98);
+}
+
+.answer-card.selected {
+  border-color: var(--w-primary);
+  background: var(--w-primary-light);
+}
+
+.answer-card .card-indicator {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--w-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.answer-card.checkbox-card .card-indicator {
+  border-radius: 4px;
+}
+
+.answer-card.selected .card-indicator {
+  border-color: var(--w-primary);
+  background: var(--w-primary);
+}
+
+.answer-card.selected .card-indicator::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.answer-card.checkbox-card.selected .card-indicator::after {
+  width: 12px;
+  height: 12px;
+  background: none;
+  border-radius: 0;
+  /* checkmark via CSS */
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg);
+  margin-top: -2px;
+}
+
+/* ── Answer card with image ──────────────────────────────────────────────── */
+.answer-card img {
+  border-radius: 6px;
+  max-width: 100%;
+  width: 200px;
+  margin-top: 0.5rem;
+}
+
+.answer-card.has-image {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.answer-card.has-image .card-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* ── Pain scale (horizontal buttons) ─────────────────────────────────────── */
+.pain-scale-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.pain-scale-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: 2px solid var(--w-border);
+  border-radius: var(--w-radius);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  background: var(--w-surface);
+  color: var(--w-text);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.pain-scale-btn:hover {
+  border-color: var(--w-primary);
+  color: var(--w-primary);
+}
+
+.pain-scale-btn:active {
+  transform: scale(0.95);
+}
+
+.pain-scale-btn.selected {
+  background: var(--w-primary);
+  border-color: var(--w-primary);
+  color: #fff;
+}
+
+/* ── Number input ────────────────────────────────────────────────────────── */
+.number-input-wrap {
+  margin-top: 0.25rem;
+}
+
+.number-input-wrap input[type="number"] {
+  width: 140px;
+  padding: 0.65rem 0.85rem;
+  border: 2px solid var(--w-border);
+  border-radius: var(--w-radius);
+  font-size: 1.1rem;
+  background: var(--w-surface);
+  color: var(--w-text);
+  appearance: textfield;
+  -moz-appearance: textfield;
+  transition: border-color 0.2s;
+}
+
+.number-input-wrap input[type="number"]:focus {
+  outline: none;
+  border-color: var(--w-primary);
+}
+
+.number-input-wrap input[type="number"]::-webkit-inner-spin-button,
+.number-input-wrap input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+
+/* ── Navigation buttons ──────────────────────────────────────────────────── */
+.step-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem;
+  background: transparent;
+  border: 1.5px solid var(--w-border);
+  border-radius: var(--w-radius);
+  font-size: 0.9rem;
+  color: var(--w-text-muted);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-back:hover {
+  border-color: var(--w-text-muted);
+  color: var(--w-text);
+}
+
+.btn-back::before {
+  content: "\2190"; /* left arrow */
+}
+
+.btn-next {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  background: var(--w-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--w-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btn-next:hover { background: var(--w-primary-hover); }
+.btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Loading / processing screen ─────────────────────────────────────────── */
+.processing-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 1rem;
+  text-align: center;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--w-border);
+  border-top-color: var(--w-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.processing-screen p {
+  color: var(--w-text-muted);
+  font-size: 0.95rem;
+}
+
+/* ── Results screen ──────────────────────────────────────────────────────── */
+.results-screen {
+  padding: 1.5rem 0 2rem;
+}
+
+.results-screen h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.results-card {
+  background: var(--w-surface);
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.results-card h3 { margin-top: 1rem; }
+.results-card h3:first-child { margin-top: 0; }
+.results-card p { margin-bottom: 0.75rem; }
+.results-card ol, .results-card ul { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+
+/* ── Consultation form (reused from widget-consultation.js) ──────────────── */
+.consultation-section {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: var(--w-surface);
+  border: 1px solid var(--w-border);
+  border-radius: var(--w-radius);
+}
+
+.consultation-section h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.form-field { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 1rem; }
+.form-field label { font-size: 0.9rem; font-weight: 500; padding: 0; cursor: default; }
+
+.form-field input[type="text"],
+.form-field input[type="tel"] {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid var(--w-border);
+  border-radius: var(--w-radius);
+  font-size: 0.95rem;
+  background: var(--w-bg);
+  color: var(--w-text);
+  transition: border-color 0.2s;
+}
+
+.form-field input:focus {
+  outline: none;
+  border-color: var(--w-primary);
+}
+
+.privacy-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--w-text-muted);
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.privacy-label input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--w-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.privacy-label a { color: var(--w-primary); }
+
+.btn-submit {
+  padding: 0.8rem 2rem;
+  background: var(--w-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--w-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.btn-submit:hover { background: var(--w-primary-hover); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.form-error {
+  font-size: 0.85rem;
+  color: var(--w-error);
+  margin-top: 0.5rem;
+}
+
+/* ── File upload section ─────────────────────────────────────────────────── */
+.file-upload-section {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  background: var(--w-surface);
+  border: 1px dashed var(--w-border);
+  border-radius: var(--w-radius);
+}
+
+.file-upload-section h3 { margin-bottom: 0.5rem; font-size: 1.05rem; font-weight: 600; }
+.file-upload-section p { font-size: 0.85rem; color: var(--w-text-muted); margin-bottom: 0.75rem; }
+
+.file-input-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+
+input[type="file"] {
+  font-size: 0.9rem;
+  padding: 0.4rem 0;
+  color: var(--w-text);
+}
+
+.btn-upload {
+  padding: 0.6rem 1.25rem;
+  background: var(--w-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--w-radius);
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.2s;
+}
+
+.btn-upload:hover { background: var(--w-primary-hover); }
+.btn-upload:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.upload-status { font-size: 0.85rem; margin-top: 0.4rem; }
+.upload-status.success { color: var(--w-success); }
+.upload-status.error   { color: var(--w-error); }
+
+/* ── Success message ─────────────────────────────────────────────────────── */
+.success-message { text-align: center; padding: 1rem 0; }
+.success-message h2 { font-size: 1.2rem; font-weight: 600; }
+.success-message p { color: var(--w-text-muted); margin-top: 0.5rem; }
+
+/* ── Loading screen (initial) ────────────────────────────────────────────── */
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 0.75rem;
+  color: var(--w-text-muted);
+}
+
+/* ── Error screen ────────────────────────────────────────────────────────── */
+.error-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30vh;
+  color: var(--w-error);
+  text-align: center;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .welcome-screen h1 { font-size: 1.25rem; }
+  .question-title { font-size: 1.05rem; }
+  .pain-scale-btn { width: 2.6rem; height: 2.6rem; font-size: 0.9rem; }
+  .answer-card { padding: 0.75rem 0.85rem; font-size: 0.9rem; }
+  .answer-card img { width: 180px; }
+}
