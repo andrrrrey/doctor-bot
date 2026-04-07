@@ -173,6 +173,8 @@ function renderProgressBar() {
 function goToStep(index, direction) {
   if (isTransitioning) return;
   if (index < 0) { showWelcome(); return; }
+  // Clamp to valid range if follow-ups were removed during navigation
+  if (index > flatSteps.length) index = flatSteps.length;
   if (index >= flatSteps.length) { handleSubmit(); return; }
 
   const app = document.getElementById('app');
@@ -204,7 +206,7 @@ function goToStep(index, direction) {
 
 function renderQuestion(question, direction) {
   const enterClass = direction === 'back' ? 'step-enter-back' : 'step-enter';
-  const needsNextBtn = question.type === 'checkbox' || question.type === 'number';
+  const needsNextBtn = question.type === 'checkbox' || question.type === 'number' || question.type === 'text';
   const currentAnswers = answers.get(question.id) || [];
 
   let optionsHtml = '';
@@ -217,6 +219,11 @@ function renderQuestion(question, direction) {
     optionsHtml = renderCheckboxCards(question, currentAnswers);
   } else if (question.type === 'number') {
     optionsHtml = renderNumberInput(question, currentAnswers);
+  } else if (question.type === 'text') {
+    optionsHtml = renderTextInput(question, currentAnswers);
+  } else {
+    // Unknown type — render a minimal fallback so the user is not stuck
+    optionsHtml = `<div class="form-error">Тип вопроса «${escapeHtml(question.type || '')}» не поддерживается.</div>`;
   }
 
   const backBtn = currentStep > 0 || currentStep === 0
@@ -290,6 +297,15 @@ function renderNumberInput(question, selected) {
   `;
 }
 
+function renderTextInput(question, selected) {
+  const value = selected.length > 0 ? selected[0] : '';
+  return `
+    <div class="number-input-wrap">
+      <input type="text" id="textInput" value="${escapeAttr(value)}" placeholder="Введите ответ" />
+    </div>
+  `;
+}
+
 // ── Event binding ───────────────────────────────────────────────────────────
 function bindQuestionEvents(question) {
   // Back button
@@ -316,6 +332,8 @@ function bindQuestionEvents(question) {
     bindCheckboxCards(question);
   } else if (question.type === 'number') {
     bindNumberInput(question);
+  } else if (question.type === 'text') {
+    bindTextInput(question);
   }
 }
 
@@ -407,6 +425,34 @@ function bindNumberInput(question) {
   input.focus();
 }
 
+function bindTextInput(question) {
+  const input = document.getElementById('textInput');
+  if (!input) return;
+
+  input.addEventListener('input', () => {
+    const val = input.value.trim();
+    if (val) {
+      answers.set(question.id, [val]);
+    } else {
+      answers.delete(question.id);
+    }
+
+    const nextBtn = document.getElementById('nextBtn');
+    if (nextBtn) {
+      nextBtn.disabled = !val;
+    }
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && input.value.trim()) {
+      e.preventDefault();
+      advanceForward();
+    }
+  });
+
+  input.focus();
+}
+
 function advanceForward() {
   if (isTransitioning) return;
   // Recalculate flat steps in case follow-ups changed
@@ -434,20 +480,31 @@ async function handleSubmit() {
     }
   });
 
+  console.log('[widget-steps] submitting answers:', answersArray);
+
+  let errorDetails = '';
   try {
     const res = await fetch('/postTestResults', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(answersArray),
     });
-    if (!res.ok) throw new Error('Server error');
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      errorDetails = `HTTP ${res.status} ${res.statusText}${text ? ': ' + text.slice(0, 300) : ''}`;
+      throw new Error(errorDetails);
+    }
     const result = await res.json();
+    console.log('[widget-steps] result:', result);
 
     showResults(result);
-  } catch {
+  } catch (err) {
+    console.error('[widget-steps] submit failed:', err);
+    const msg = errorDetails || (err && err.message) || 'Неизвестная ошибка';
     app.innerHTML = `
       <div class="step-screen processing-screen">
         <p style="color: var(--w-error)">Произошла ошибка при обработке. Попробуйте ещё раз.</p>
+        <p style="font-size:0.8rem;color:var(--w-text-muted);max-width:480px;word-break:break-word">${escapeHtml(msg)}</p>
         <button class="btn-primary" id="retryBtn">Попробовать снова</button>
       </div>
     `;
