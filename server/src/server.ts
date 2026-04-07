@@ -68,6 +68,11 @@ app.get('/widget', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../../public/widget.html'));
 });
 
+// Serves the step-by-step widget page at /widget-steps
+app.get('/widget-steps', (_req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, '../../public/widget-steps.html'));
+});
+
 // ── Admin panel HTML ─────────────────────────────────────────────────────────
 app.get('/admin', (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '../../public/admin/index.html'));

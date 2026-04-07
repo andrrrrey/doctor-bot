@@ -1067,7 +1067,10 @@ async function saveSettings() {
   const settingsKeys = [
     'primaryColor', 'backgroundColor', 'textColor',
     'borderRadius', 'fontFamily', 'surveyTitle', 'surveyDisclaimer',
-    'privacyPolicyUrl', 'bitrixWebhookUrl', 'bitrixLeadTitle',
+    'privacyPolicyUrl',
+    'stepsWelcomeTitle', 'stepsWelcomeText', 'stepsWelcomeTime',
+    'stepsWelcomeButton', 'stepsResultTitle', 'stepsResultText',
+    'bitrixWebhookUrl', 'bitrixLeadTitle',
     'smtpHost', 'smtpPort', 'smtpSecure', 'smtpUser', 'emailRecipients',
   ];
 
